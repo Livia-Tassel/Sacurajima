@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { APP_TAGLINE, createWelcomeHeading } from '../../shared/app-meta';
+import { parseWindowView } from '../../shared/window-view';
 import type { AppVersionResponse } from '../../shared/preload-api';
+import { CompanionView } from './components/CompanionView';
+import { PanelView } from './components/PanelView';
 
 export default function App() {
   const [version, setVersion] = useState('...');
+  const view = parseWindowView(window.location.search);
 
   useEffect(() => {
     void window.sakurajima.app.getVersion().then((result: AppVersionResponse) => {
@@ -11,24 +14,9 @@ export default function App() {
     });
   }, []);
 
-  return (
-    <main className="app-shell">
-      <section className="hero-card">
-        <p className="eyebrow">Document-Driven Foundation</p>
-        <h1>{createWelcomeHeading(version)}</h1>
-        <p className="tagline">{APP_TAGLINE}</p>
-        <p className="body">
-          Feature 1 establishes the Electron, preload, and renderer structure.
-          Companion windows, New API onboarding, and chat flow will be layered
-          on top of this baseline in subsequent commits.
-        </p>
-        <div className="pill-row">
-          <span className="pill">Electron</span>
-          <span className="pill">React</span>
-          <span className="pill">TypeScript</span>
-          <span className="pill">Docs First</span>
-        </div>
-      </section>
-    </main>
-  );
+  if (view === 'companion') {
+    return <CompanionView onOpenPanel={() => void window.sakurajima.window.showPanel()} version={version} />;
+  }
+
+  return <PanelView version={version} />;
 }

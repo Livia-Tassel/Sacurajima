@@ -71,6 +71,27 @@ type ChatSession = {
 type CompanionMood = 'idle' | 'thinking' | 'replying' | 'sleeping' | 'error';
 ```
 
+## WindowState
+
+```ts
+type WindowState = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  visible: boolean;
+};
+```
+
+## PersistedWindowState
+
+```ts
+type PersistedWindowState = {
+  companion: WindowState;
+  panel: WindowState;
+};
+```
+
 ## IpcError
 
 ```ts
@@ -87,4 +108,3 @@ type IpcError = {
   retriable: boolean;
 };
 ```
-

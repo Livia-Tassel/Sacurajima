@@ -64,6 +64,16 @@
 ## `window.togglePanel()`
 
 - 作用：切换聊天面板显隐
+- 返回：
+  - `ok: true`
+  - `data: { visible: boolean }`
+
+## `window.showPanel()`
+
+- 作用：显式展示聊天面板并聚焦
+- 返回：
+  - `ok: true`
+  - `data: { visible: true }`
 
 ## `events.onChatEvent(callback)`
 
@@ -73,4 +83,3 @@
   - `chat-complete`
   - `chat-error`
   - `session-updated`
-

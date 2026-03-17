@@ -1,55 +1,112 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
-import { join } from 'node:path';
+import { app, BrowserWindow, ipcMain, Tray } from 'electron';
+import { createAppTray } from './tray';
+import { runtimeState } from './runtime-state';
+import { WindowStateStore } from './window-state-store';
+import { createCompanionWindow, createPanelWindow } from './windows';
 
-const isDev = !app.isPackaged;
+let companionWindow: BrowserWindow | null = null;
+let panelWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
 
-function createMainWindow() {
-  const window = new BrowserWindow({
-    width: 1120,
-    height: 760,
-    minWidth: 960,
-    minHeight: 640,
-    show: false,
-    title: 'Sakurajima',
-    backgroundColor: '#fff7f3',
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true
-    }
-  });
+const singleInstance = app.requestSingleInstanceLock();
 
-  window.once('ready-to-show', () => {
-    window.show();
-  });
-
-  if (isDev && process.env.ELECTRON_RENDERER_URL) {
-    void window.loadURL(process.env.ELECTRON_RENDERER_URL);
-  } else {
-    void window.loadFile(join(__dirname, '../renderer/index.html'));
-  }
-
-  return window;
+if (!singleInstance) {
+  app.quit();
 }
 
-app.whenReady().then(() => {
-  ipcMain.handle('app:get-version', () => ({
-    version: app.getVersion()
-  }));
+function showPanel() {
+  if (!panelWindow) {
+    return { visible: false };
+  }
 
-  createMainWindow();
+  panelWindow.show();
+  panelWindow.focus();
+  return { visible: true };
+}
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
+function togglePanel() {
+  if (!panelWindow) {
+    return { visible: false };
+  }
+
+  if (panelWindow.isVisible()) {
+    panelWindow.hide();
+    return { visible: false };
+  }
+
+  panelWindow.show();
+  panelWindow.focus();
+  return { visible: true };
+}
+
+function toggleCompanion() {
+  if (!companionWindow) {
+    return;
+  }
+
+  if (companionWindow.isVisible()) {
+    companionWindow.hide();
+  } else {
+    companionWindow.showInactive();
+  }
+}
+
+if (singleInstance) {
+  app.on('second-instance', () => {
+    if (companionWindow && !companionWindow.isVisible()) {
+      companionWindow.showInactive();
+    }
+
+    showPanel();
+  });
+
+  app.whenReady().then(() => {
+    const windowStateStore = new WindowStateStore();
+
+    companionWindow = createCompanionWindow(windowStateStore);
+    panelWindow = createPanelWindow(windowStateStore);
+
+    tray = createAppTray({
+      toggleCompanion: () => {
+        toggleCompanion();
+      },
+      showPanel: () => {
+        showPanel();
+      },
+      quit: () => {
+        runtimeState.isQuitting = true;
+        app.quit();
+      },
+      isCompanionVisible: () => companionWindow?.isVisible() ?? false
+    });
+
+    ipcMain.handle('app:get-version', () => ({
+      version: app.getVersion()
+    }));
+    ipcMain.handle('window:toggle-panel', () => togglePanel());
+    ipcMain.handle('window:show-panel', () => showPanel());
+
+    app.on('activate', () => {
+      if (companionWindow && !companionWindow.isDestroyed() && !companionWindow.isVisible()) {
+        companionWindow.showInactive();
+      }
+      if (panelWindow && !panelWindow.isDestroyed() && !panelWindow.isVisible()) {
+        panelWindow.show();
+      }
+    });
+  });
+
+  app.on('before-quit', () => {
+    runtimeState.isQuitting = true;
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
     }
   });
-});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
-
+  app.on('quit', () => {
+    tray?.destroy();
+  });
+}
