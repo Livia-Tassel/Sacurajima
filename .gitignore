@@ -1,0 +1,14 @@
+.DS_Store
+node_modules/
+dist/
+dist-electron/
+release/
+out/
+coverage/
+.vite/
+playwright-report/
+test-results/
+*.log
+tmp/
+output/imagegen/
+
