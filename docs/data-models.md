@@ -9,7 +9,7 @@ type AppConfigInput = {
   providerPreset: ProviderPreset;
   siteUrl?: string;
   baseUrl?: string;
-  apiKey: string;
+  apiKey?: string;
   model: string;
   systemPrompt: string;
   temperature: number;
@@ -22,11 +22,32 @@ type AppConfigInput = {
 type AppConfigView = {
   providerPreset: ProviderPreset;
   siteUrl?: string;
+  baseUrl?: string;
   baseUrlNormalized: string;
   model: string;
   systemPrompt: string;
   temperature: number;
   hasApiKey: boolean;
+};
+```
+
+## ConnectionTestResult
+
+```ts
+type ConnectionTestResult = {
+  ok: boolean;
+  normalizedBaseUrl: string;
+  modelCount?: number;
+  sampledModels?: string[];
+  message: string;
+  errorCode?:
+    | 'VALIDATION_ERROR'
+    | 'MISSING_CONFIG'
+    | 'UNAUTHORIZED'
+    | 'TIMEOUT'
+    | 'NETWORK_ERROR'
+    | 'INVALID_RESPONSE'
+    | 'UNKNOWN_ERROR';
 };
 ```
 
@@ -98,11 +119,13 @@ type PersistedWindowState = {
 type IpcError = {
   code:
     | 'VALIDATION_ERROR'
+    | 'MISSING_CONFIG'
     | 'UNAUTHORIZED'
     | 'TIMEOUT'
     | 'NETWORK_ERROR'
     | 'INVALID_RESPONSE'
     | 'NOT_FOUND'
+    | 'UNSUPPORTED_ENV'
     | 'UNKNOWN_ERROR';
   message: string;
   retriable: boolean;

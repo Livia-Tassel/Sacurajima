@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, Tray } from 'electron';
+import { ConfigStore } from './config-store';
 import { createAppTray } from './tray';
 import { runtimeState } from './runtime-state';
 import { WindowStateStore } from './window-state-store';
@@ -61,6 +62,7 @@ if (singleInstance) {
   });
 
   app.whenReady().then(() => {
+    const configStore = new ConfigStore();
     const windowStateStore = new WindowStateStore();
 
     companionWindow = createCompanionWindow(windowStateStore);
@@ -83,6 +85,9 @@ if (singleInstance) {
     ipcMain.handle('app:get-version', () => ({
       version: app.getVersion()
     }));
+    ipcMain.handle('settings:load', () => configStore.load());
+    ipcMain.handle('settings:save', (_event, config) => configStore.save(config));
+    ipcMain.handle('settings:test-connection', (_event, config) => configStore.testConnection(config));
     ipcMain.handle('window:toggle-panel', () => togglePanel());
     ipcMain.handle('window:show-panel', () => showPanel());
 

@@ -1,10 +1,15 @@
+import type { AppConfigView } from '../../../shared/config';
+import { SettingsForm } from './SettingsForm';
+
 type PanelViewProps = {
+  config: AppConfigView;
+  loadError: string;
+  loading: boolean;
+  onSaved: (config: AppConfigView) => void;
   version: string;
 };
 
-const sessions = ['Today', 'Ideas', 'Sakurajima Notes'];
-
-export function PanelView({ version }: PanelViewProps) {
+export function PanelView({ config, loadError, loading, onSaved, version }: PanelViewProps) {
   return (
     <main className="panel-root">
       <section className="panel-shell">
@@ -13,47 +18,44 @@ export function PanelView({ version }: PanelViewProps) {
             <p className="panel-kicker">Desktop Companion</p>
             <h1>Sakurajima</h1>
             <p className="panel-copy">
-              The shell is ready. Onboarding, settings, and chat will land in the
-              next features without changing the panel structure.
+              Configure New API or any OpenAI-compatible endpoint here. Chat and
+              local history will attach to this same shell in the next feature.
             </p>
           </div>
           <div className="panel-session-list">
-            {sessions.map((session) => (
-              <button key={session} className="panel-session" type="button">
-                {session}
-              </button>
-            ))}
+            <div className="panel-session panel-session-static">
+              <p className="panel-label">Renderer</p>
+              <p className="panel-value">{version}</p>
+            </div>
+            <div className="panel-session panel-session-static">
+              <p className="panel-label">Saved key</p>
+              <p className="panel-value">{config.hasApiKey ? 'Encrypted locally' : 'Not saved yet'}</p>
+            </div>
+            <div className="panel-session panel-session-static">
+              <p className="panel-label">Normalized base URL</p>
+              <p className="panel-value">{config.baseUrlNormalized || 'Waiting for setup'}</p>
+            </div>
           </div>
         </aside>
 
         <section className="panel-content">
           <div className="panel-hero-card">
-            <p className="panel-kicker">Feature 2</p>
-            <h2>Floating companion shell is active</h2>
+            <p className="panel-kicker">Feature 3</p>
+            <h2>New API onboarding is now the primary panel flow</h2>
             <p>
-              The tray menu, dual-window coordination, window persistence, and
-              single-instance behavior are now handled by the main process.
+              Configuration persists locally, API keys stay encrypted, and the
+              connection test uses the normalized OpenAI-compatible base URL.
             </p>
             <div className="panel-pill-row">
-              <span className="panel-pill">Tray</span>
-              <span className="panel-pill">Single Instance</span>
-              <span className="panel-pill">Window Restore</span>
+              <span className="panel-pill">New API</span>
+              <span className="panel-pill">safeStorage</span>
+              <span className="panel-pill">GET /models</span>
             </div>
           </div>
 
-          <div className="panel-placeholder">
-            <div>
-              <p className="panel-label">Next up</p>
-              <p className="panel-value">New API onboarding and encrypted config</p>
-            </div>
-            <div>
-              <p className="panel-label">Current renderer build</p>
-              <p className="panel-value">{version}</p>
-            </div>
-          </div>
+          <SettingsForm config={config} loadError={loadError} loading={loading} onSaved={onSaved} />
         </section>
       </section>
     </main>
   );
 }
-

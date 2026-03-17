@@ -4,7 +4,8 @@ info:
   version: 1.0.0
   description: >
     Sakurajima 运行时依赖的外部接口规范。默认优先接入 New API，
-    但保持 OpenAI-compatible 兼容方式。
+    但保持 OpenAI-compatible 兼容方式。若用户输入站点根地址，
+    应用会将其规范化为带 `/v1` 的兼容基址；若用户已提供完整兼容基址，则直接使用。
 servers:
   - url: "{baseUrl}"
     variables:
@@ -162,4 +163,3 @@ components:
               type: string
             code:
               type: string
-

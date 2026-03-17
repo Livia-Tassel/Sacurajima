@@ -18,6 +18,9 @@
 
 - 作用：保存配置
 - 入参：`AppConfigInput`
+- 规则：
+  - `apiKey` 为空时，若本地已有已保存 Key，则沿用原值
+  - 若本地不存在 Key，则 `apiKey` 为空视为错误
 - 返回：
   - `ok: true`
   - `data: AppConfigView`
@@ -31,6 +34,10 @@
   - `ok: true`
   - `data: ConnectionTestResult`
   - 或 `ok: false`, `error: IpcError`
+- 规则：
+  - 使用规范化后的兼容基址请求 `GET /models`
+  - 成功时返回模型数量与最多 5 个样本模型名
+  - 不泄露完整鉴权头或原始敏感响应
 
 ## `chat.send(message, sessionId)`
 
