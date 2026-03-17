@@ -11,9 +11,16 @@ export class ChatSessionStore {
   private readonly filePath = join(app.getPath('userData'), 'chat-sessions.json');
   private sessions: ChatSession[];
   private writeTimer: NodeJS.Timeout | null = null;
+  private corrupted = false;
 
   constructor() {
-    this.sessions = this.readSessionsFromDisk();
+    const { sessions, corrupted } = this.readSessionsFromDisk();
+    this.sessions = sessions;
+    this.corrupted = corrupted;
+  }
+
+  isCorrupted() {
+    return this.corrupted;
   }
 
   list(): SessionSummary[] {
@@ -52,16 +59,19 @@ export class ChatSessionStore {
     this.writeSessions(this.sessions);
   }
 
-  private readSessionsFromDisk(): ChatSession[] {
+  private readSessionsFromDisk(): { sessions: ChatSession[]; corrupted: boolean } {
     if (!existsSync(this.filePath)) {
-      return [];
+      return { sessions: [], corrupted: false };
     }
 
     try {
       const parsed = JSON.parse(readFileSync(this.filePath, 'utf8')) as SessionStorePayload;
-      return Array.isArray(parsed.sessions) ? parsed.sessions : [];
+      return {
+        sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+        corrupted: false
+      };
     } catch {
-      return [];
+      return { sessions: [], corrupted: true };
     }
   }
 

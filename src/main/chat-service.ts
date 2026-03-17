@@ -41,6 +41,13 @@ export class ChatService {
   ) {}
 
   listHistory() {
+    if (this.sessionStore.isCorrupted()) {
+      return {
+        ok: false as const,
+        error: createError('INVALID_RESPONSE', 'The saved chat history file is unreadable or corrupted.', false)
+      };
+    }
+
     return {
       ok: true as const,
       data: this.sessionStore.list()
@@ -48,6 +55,13 @@ export class ChatService {
   }
 
   getHistory(sessionId: string) {
+    if (this.sessionStore.isCorrupted()) {
+      return {
+        ok: false as const,
+        error: createError('INVALID_RESPONSE', 'The saved chat history file is unreadable or corrupted.', false)
+      };
+    }
+
     const session = this.sessionStore.get(sessionId);
     if (!session) {
       return {
@@ -63,6 +77,13 @@ export class ChatService {
   }
 
   clearHistory(sessionId: string) {
+    if (this.sessionStore.isCorrupted()) {
+      return {
+        ok: false as const,
+        error: createError('INVALID_RESPONSE', 'The saved chat history file is unreadable or corrupted.', false)
+      };
+    }
+
     this.controllers.get(sessionId)?.abort();
     this.controllers.delete(sessionId);
     this.sessionStore.clear(sessionId);
@@ -82,6 +103,13 @@ export class ChatService {
   }
 
   async send(message: string, sessionId?: string): Promise<IpcResult<SendChatResult>> {
+    if (this.sessionStore.isCorrupted()) {
+      return {
+        ok: false,
+        error: createError('INVALID_RESPONSE', 'The saved chat history file is unreadable or corrupted.', false)
+      };
+    }
+
     const trimmedMessage = message.trim();
     if (!trimmedMessage) {
       return {
