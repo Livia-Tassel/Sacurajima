@@ -30,13 +30,32 @@ body {
 .panel-root {
   min-height: 100vh;
   display: grid;
-  padding: 24px;
+  padding: 16px 24px 24px;
+  gap: 12px;
+}
+
+.panel-window-bar {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: drag;
+}
+
+.panel-window-grip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.54);
+  color: #b46d91;
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .panel-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  min-height: calc(100vh - 48px);
+  min-height: calc(100vh - 68px);
   border-radius: 32px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.72);

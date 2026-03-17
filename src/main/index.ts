@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, Tray } from 'electron';
 import { ChatService } from './chat-service';
 import { ChatSessionStore } from './chat-session-store';
 import { ConfigStore } from './config-store';
@@ -10,11 +10,101 @@ import { createCompanionWindow, createPanelWindow } from './windows';
 let companionWindow: BrowserWindow | null = null;
 let panelWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+const PANEL_GAP = 28;
 
 const singleInstance = app.requestSingleInstanceLock();
 
 if (!singleInstance) {
   app.quit();
+}
+
+function rectsOverlap(
+  left: { x: number; y: number; width: number; height: number },
+  right: { x: number; y: number; width: number; height: number }
+) {
+  return (
+    left.x < right.x + right.width &&
+    left.x + left.width > right.x &&
+    left.y < right.y + right.height &&
+    left.y + left.height > right.y
+  );
+}
+
+function clampBoundsToWorkArea(
+  bounds: { x: number; y: number; width: number; height: number },
+  workArea: { x: number; y: number; width: number; height: number }
+) {
+  return {
+    ...bounds,
+    x: Math.min(Math.max(bounds.x, workArea.x), workArea.x + Math.max(0, workArea.width - bounds.width)),
+    y: Math.min(Math.max(bounds.y, workArea.y), workArea.y + Math.max(0, workArea.height - bounds.height))
+  };
+}
+
+function syncCompanionLayering() {
+  if (!companionWindow) {
+    return;
+  }
+
+  const panelVisible = panelWindow?.isVisible() ?? false;
+  companionWindow.setAlwaysOnTop(!panelVisible, panelVisible ? 'normal' : 'floating');
+
+  const overlap =
+    panelVisible && panelWindow
+      ? rectsOverlap(companionWindow.getBounds(), panelWindow.getBounds())
+      : false;
+
+  companionWindow.setOpacity(overlap ? 0 : 1);
+  companionWindow.setIgnoreMouseEvents(overlap);
+}
+
+function positionPanelAwayFromCompanion() {
+  if (!panelWindow || !companionWindow || !panelWindow.isVisible() || !companionWindow.isVisible()) {
+    return;
+  }
+
+  const panelBounds = panelWindow.getBounds();
+  const companionBounds = companionWindow.getBounds();
+
+  if (!rectsOverlap(panelBounds, companionBounds)) {
+    return;
+  }
+
+  const workArea = screen.getDisplayMatching(panelBounds).workArea;
+  const candidates = [
+    {
+      x: companionBounds.x - panelBounds.width - PANEL_GAP,
+      y: companionBounds.y,
+      width: panelBounds.width,
+      height: panelBounds.height
+    },
+    {
+      x: companionBounds.x + companionBounds.width + PANEL_GAP,
+      y: companionBounds.y,
+      width: panelBounds.width,
+      height: panelBounds.height
+    },
+    {
+      x: panelBounds.x,
+      y: companionBounds.y + companionBounds.height + PANEL_GAP,
+      width: panelBounds.width,
+      height: panelBounds.height
+    },
+    {
+      x: panelBounds.x,
+      y: companionBounds.y - panelBounds.height - PANEL_GAP,
+      width: panelBounds.width,
+      height: panelBounds.height
+    }
+  ];
+
+  for (const candidate of candidates) {
+    const clamped = clampBoundsToWorkArea(candidate, workArea);
+    if (!rectsOverlap(clamped, companionBounds)) {
+      panelWindow.setBounds(clamped);
+      return;
+    }
+  }
 }
 
 function showPanel() {
@@ -23,6 +113,8 @@ function showPanel() {
   }
 
   panelWindow.show();
+  syncCompanionLayering();
+  positionPanelAwayFromCompanion();
   panelWindow.focus();
   return { visible: true };
 }
@@ -34,10 +126,13 @@ function togglePanel() {
 
   if (panelWindow.isVisible()) {
     panelWindow.hide();
+    syncCompanionLayering();
     return { visible: false };
   }
 
   panelWindow.show();
+  syncCompanionLayering();
+  positionPanelAwayFromCompanion();
   panelWindow.focus();
   return { visible: true };
 }
@@ -51,6 +146,8 @@ function toggleCompanion() {
     companionWindow.hide();
   } else {
     companionWindow.showInactive();
+    syncCompanionLayering();
+    positionPanelAwayFromCompanion();
   }
 }
 
@@ -73,6 +170,23 @@ if (singleInstance) {
 
     companionWindow = createCompanionWindow(windowStateStore);
     panelWindow = createPanelWindow(windowStateStore);
+
+    panelWindow.on('show', () => {
+      syncCompanionLayering();
+      positionPanelAwayFromCompanion();
+    });
+    panelWindow.on('hide', () => {
+      syncCompanionLayering();
+    });
+    companionWindow.on('show', () => {
+      syncCompanionLayering();
+      positionPanelAwayFromCompanion();
+    });
+
+    setTimeout(() => {
+      syncCompanionLayering();
+      positionPanelAwayFromCompanion();
+    }, 250);
 
     tray = createAppTray({
       toggleCompanion: () => {
@@ -109,6 +223,8 @@ if (singleInstance) {
       if (panelWindow && !panelWindow.isDestroyed() && !panelWindow.isVisible()) {
         panelWindow.show();
       }
+      syncCompanionLayering();
+      positionPanelAwayFromCompanion();
     });
   });
 

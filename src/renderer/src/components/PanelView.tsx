@@ -219,6 +219,9 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
 
   return (
     <main className="panel-root">
+      <div className="panel-window-bar" aria-hidden="true">
+        <span className="panel-window-grip">Move Window</span>
+      </div>
       <section className="panel-shell">
         <aside className="panel-sidebar">
           <div>

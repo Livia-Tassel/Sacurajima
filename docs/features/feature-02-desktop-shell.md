@@ -26,6 +26,8 @@
 - 已实现单实例约束；重复启动时恢复 companion，并拉起 panel
 - 已实现托盘菜单，可切换桌宠显隐、打开面板、退出应用
 - 已通过 preload 暴露 `window.togglePanel()` 与 `window.showPanel()`，未向 renderer 暴露额外高权限能力
+- 已补充窗口避让逻辑：panel 显示时会自动尝试避开 companion
+- 已补充 panel 顶部拖动条，降低移动窗口的发现成本
 
 ## 验证结果
 
