@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, screen, Tray } from 'electron';
+import { join } from 'node:path';
 import { ChatService } from './chat-service';
 import { ChatSessionStore } from './chat-session-store';
 import { ConfigStore } from './config-store';
@@ -10,7 +11,12 @@ import { createCompanionWindow, createPanelWindow } from './windows';
 let companionWindow: BrowserWindow | null = null;
 let panelWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let chatSessionStore: ChatSessionStore | null = null;
+let windowStateStore: WindowStateStore | null = null;
 const PANEL_GAP = 28;
+
+app.setName('Sakurajima');
+app.setPath('userData', join(app.getPath('appData'), 'Sakurajima'));
 
 const singleInstance = app.requestSingleInstanceLock();
 
@@ -162,11 +168,25 @@ if (singleInstance) {
 
   app.whenReady().then(() => {
     const configStore = new ConfigStore();
-    const chatSessionStore = new ChatSessionStore();
+    chatSessionStore = new ChatSessionStore();
     const chatService = new ChatService(configStore, chatSessionStore, () =>
       [companionWindow, panelWindow].filter((window): window is BrowserWindow => Boolean(window))
     );
-    const windowStateStore = new WindowStateStore();
+    windowStateStore = new WindowStateStore();
+
+    ipcMain.handle('app:get-version', () => ({
+      version: app.getVersion()
+    }));
+    ipcMain.handle('chat:send', (_event, message, sessionId) => chatService.send(message, sessionId));
+    ipcMain.handle('chat:abort', (_event, sessionId) => chatService.abort(sessionId));
+    ipcMain.handle('history:list', () => chatService.listHistory());
+    ipcMain.handle('history:get', (_event, sessionId) => chatService.getHistory(sessionId));
+    ipcMain.handle('history:clear', (_event, sessionId) => chatService.clearHistory(sessionId));
+    ipcMain.handle('settings:load', () => configStore.load());
+    ipcMain.handle('settings:save', (_event, config) => configStore.save(config));
+    ipcMain.handle('settings:test-connection', (_event, config) => configStore.testConnection(config));
+    ipcMain.handle('window:toggle-panel', () => togglePanel());
+    ipcMain.handle('window:show-panel', () => showPanel());
 
     companionWindow = createCompanionWindow(windowStateStore);
     panelWindow = createPanelWindow(windowStateStore);
@@ -202,20 +222,6 @@ if (singleInstance) {
       isCompanionVisible: () => companionWindow?.isVisible() ?? false
     });
 
-    ipcMain.handle('app:get-version', () => ({
-      version: app.getVersion()
-    }));
-    ipcMain.handle('chat:send', (_event, message, sessionId) => chatService.send(message, sessionId));
-    ipcMain.handle('chat:abort', (_event, sessionId) => chatService.abort(sessionId));
-    ipcMain.handle('history:list', () => chatService.listHistory());
-    ipcMain.handle('history:get', (_event, sessionId) => chatService.getHistory(sessionId));
-    ipcMain.handle('history:clear', (_event, sessionId) => chatService.clearHistory(sessionId));
-    ipcMain.handle('settings:load', () => configStore.load());
-    ipcMain.handle('settings:save', (_event, config) => configStore.save(config));
-    ipcMain.handle('settings:test-connection', (_event, config) => configStore.testConnection(config));
-    ipcMain.handle('window:toggle-panel', () => togglePanel());
-    ipcMain.handle('window:show-panel', () => showPanel());
-
     app.on('activate', () => {
       if (companionWindow && !companionWindow.isDestroyed() && !companionWindow.isVisible()) {
         companionWindow.showInactive();
@@ -230,6 +236,8 @@ if (singleInstance) {
 
   app.on('before-quit', () => {
     runtimeState.isQuitting = true;
+    chatSessionStore?.flush();
+    windowStateStore?.flush();
   });
 
   app.on('window-all-closed', () => {

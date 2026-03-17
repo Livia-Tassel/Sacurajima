@@ -107,6 +107,17 @@ export class ChatService {
 
     const now = new Date().toISOString();
     const currentSession = sessionId ? this.sessionStore.get(sessionId) : null;
+    if (currentSession && this.controllers.has(currentSession.id)) {
+      return {
+        ok: false,
+        error: createError(
+          'VALIDATION_ERROR',
+          'This conversation is already generating a reply. Wait for it to finish or stop it first.',
+          false
+        )
+      };
+    }
+
     const userMessage: ChatMessage = {
       id: randomUUID(),
       role: 'user',

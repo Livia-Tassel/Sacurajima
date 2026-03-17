@@ -29,8 +29,19 @@ function createDefaultState(workArea: RectLike): PersistedWindowState {
   };
 }
 
+function hasFiniteBounds(candidate: Partial<WindowState> | undefined): candidate is WindowState {
+  return Boolean(
+    candidate &&
+      Number.isFinite(candidate.x) &&
+      Number.isFinite(candidate.y) &&
+      Number.isFinite(candidate.width) &&
+      Number.isFinite(candidate.height)
+  );
+}
+
 export class WindowStateStore {
   private readonly filePath = join(app.getPath('userData'), 'window-state.json');
+  private saveTimer: NodeJS.Timeout | null = null;
 
   private state: PersistedWindowState;
 
@@ -47,7 +58,7 @@ export class WindowStateStore {
       ...this.state,
       [kind]: snapshotWindowState(bounds, visible)
     };
-    this.save();
+    this.scheduleSave();
   }
 
   setVisibility(kind: WindowKind, visible: boolean) {
@@ -58,12 +69,20 @@ export class WindowStateStore {
         visible
       }
     };
+    this.scheduleSave();
+  }
+
+  flush() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+      this.saveTimer = null;
+    }
     this.save();
   }
 
   private load(): PersistedWindowState {
-    const workArea = screen.getPrimaryDisplay().workArea;
-    const defaults = createDefaultState(workArea);
+    const primaryWorkArea = screen.getPrimaryDisplay().workArea;
+    const defaults = createDefaultState(primaryWorkArea);
 
     if (!existsSync(this.filePath)) {
       return defaults;
@@ -72,10 +91,16 @@ export class WindowStateStore {
     try {
       const raw = readFileSync(this.filePath, 'utf8');
       const parsed = JSON.parse(raw) as Partial<PersistedWindowState>;
+      const companionWorkArea = hasFiniteBounds(parsed.companion)
+        ? screen.getDisplayMatching(parsed.companion).workArea
+        : primaryWorkArea;
+      const panelWorkArea = hasFiniteBounds(parsed.panel)
+        ? screen.getDisplayMatching(parsed.panel).workArea
+        : primaryWorkArea;
 
       return {
-        companion: sanitizeWindowState(parsed.companion, defaults.companion, workArea),
-        panel: sanitizeWindowState(parsed.panel, defaults.panel, workArea)
+        companion: sanitizeWindowState(parsed.companion, defaults.companion, companionWorkArea),
+        panel: sanitizeWindowState(parsed.panel, defaults.panel, panelWorkArea)
       };
     } catch {
       return defaults;
@@ -86,5 +111,15 @@ export class WindowStateStore {
     mkdirSync(dirname(this.filePath), { recursive: true });
     writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
   }
-}
 
+  private scheduleSave() {
+    if (this.saveTimer) {
+      clearTimeout(this.saveTimer);
+    }
+
+    this.saveTimer = setTimeout(() => {
+      this.saveTimer = null;
+      this.save();
+    }, 120);
+  }
+}

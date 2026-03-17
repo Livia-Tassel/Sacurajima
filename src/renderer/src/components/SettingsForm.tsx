@@ -47,14 +47,19 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
   const [message, setMessage] = useState<MessageState>(null);
   const [connectionResult, setConnectionResult] = useState<ConnectionTestResult | null>(null);
   const [busyAction, setBusyAction] = useState<'save' | 'test' | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
+    if (isDirty) {
+      return;
+    }
     setDraft(toDraft(config));
-  }, [config]);
+  }, [config, isDirty]);
 
   const normalizedPreview = normalizeBaseUrl(draft);
 
   const updateDraft = <K extends keyof SettingsDraft>(key: K, value: SettingsDraft[K]) => {
+    setIsDirty(true);
     setDraft((current) => ({
       ...current,
       [key]: value
@@ -64,50 +69,61 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
   const handleSave = async () => {
     setBusyAction('save');
     setMessage(null);
+    try {
+      const result = await window.sakurajima.settings.save(draft);
+      if (!result.ok) {
+        setMessage({
+          tone: 'error',
+          text: describeError(result.error)
+        });
+        return;
+      }
 
-    const result = await window.sakurajima.settings.save(draft);
-
-    if (!result.ok) {
+      setIsDirty(false);
+      startTransition(() => {
+        onSaved(result.data);
+        setDraft(toDraft(result.data));
+        setMessage({
+          tone: 'success',
+          text: 'Configuration saved. API Key remains hidden and encrypted locally.'
+        });
+      });
+    } catch (error) {
       setMessage({
         tone: 'error',
-        text: describeError(result.error)
+        text: error instanceof Error ? error.message : 'Failed to save the current settings.'
       });
+    } finally {
       setBusyAction(null);
-      return;
     }
-
-    startTransition(() => {
-      onSaved(result.data);
-      setDraft(toDraft(result.data));
-      setMessage({
-        tone: 'success',
-        text: 'Configuration saved. API Key remains hidden and encrypted locally.'
-      });
-    });
-    setBusyAction(null);
   };
 
   const handleTestConnection = async () => {
     setBusyAction('test');
     setMessage(null);
+    try {
+      const result = await window.sakurajima.settings.testConnection(draft);
+      if (!result.ok) {
+        setMessage({
+          tone: 'error',
+          text: describeError(result.error)
+        });
+        return;
+      }
 
-    const result = await window.sakurajima.settings.testConnection(draft);
-
-    if (!result.ok) {
+      setConnectionResult(result.data);
+      setMessage({
+        tone: result.data.ok ? 'success' : 'error',
+        text: result.data.message
+      });
+    } catch (error) {
       setMessage({
         tone: 'error',
-        text: describeError(result.error)
+        text: error instanceof Error ? error.message : 'Failed to test the current connection.'
       });
+    } finally {
       setBusyAction(null);
-      return;
     }
-
-    setConnectionResult(result.data);
-    setMessage({
-      tone: result.data.ok ? 'success' : 'error',
-      text: result.data.message
-    });
-    setBusyAction(null);
   };
 
   return (
@@ -154,6 +170,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
               <span>Site URL</span>
               <input
                 autoComplete="off"
+                disabled={loading || busyAction !== null}
                 onChange={(event) => updateDraft('siteUrl', event.target.value)}
                 placeholder="https://your-newapi-host.example"
                 type="text"
@@ -165,6 +182,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
               <span>Base URL</span>
               <input
                 autoComplete="off"
+                disabled={loading || busyAction !== null}
                 onChange={(event) => updateDraft('baseUrl', event.target.value)}
                 placeholder="https://gateway.example.com/openai/v1"
                 type="text"
@@ -177,6 +195,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
             <span>Model</span>
             <input
               autoComplete="off"
+              disabled={loading || busyAction !== null}
               onChange={(event) => updateDraft('model', event.target.value)}
               placeholder="gpt-4.1, gpt-4o-mini, ..."
               type="text"
@@ -188,6 +207,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
             <span>API Key</span>
             <input
               autoComplete="off"
+              disabled={loading || busyAction !== null}
               onChange={(event) => updateDraft('apiKey', event.target.value)}
               placeholder={config.hasApiKey ? 'Leave blank to keep the saved key' : 'sk-...'}
               type="password"
@@ -201,6 +221,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
           <label className="field field-full">
             <span>System Prompt</span>
             <textarea
+              disabled={loading || busyAction !== null}
               onChange={(event) => updateDraft('systemPrompt', event.target.value)}
               rows={5}
               value={draft.systemPrompt}
@@ -210,6 +231,7 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
           <label className="field">
             <span>Temperature</span>
             <input
+              disabled={loading || busyAction !== null}
               max="2"
               min="0"
               onChange={(event) => updateDraft('temperature', Number(event.target.value))}

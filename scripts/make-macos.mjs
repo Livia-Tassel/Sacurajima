@@ -95,7 +95,7 @@ try {
     rmSync(dmgPath, { force: true });
   }
 
-  execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', appPath, zipPath], {
+  execFileSync('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', appBundlePath, zipPath], {
     stdio: 'inherit'
   });
 

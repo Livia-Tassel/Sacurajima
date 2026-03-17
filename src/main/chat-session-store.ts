@@ -9,37 +9,50 @@ type SessionStorePayload = {
 
 export class ChatSessionStore {
   private readonly filePath = join(app.getPath('userData'), 'chat-sessions.json');
+  private sessions: ChatSession[];
+  private writeTimer: NodeJS.Timeout | null = null;
+
+  constructor() {
+    this.sessions = this.readSessionsFromDisk();
+  }
 
   list(): SessionSummary[] {
-    return this.readSessions()
+    return [...this.sessions]
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
       .map((session) => toSessionSummary(session));
   }
 
   get(sessionId: string): ChatSession | null {
-    return this.readSessions().find((session) => session.id === sessionId) ?? null;
+    return this.sessions.find((session) => session.id === sessionId) ?? null;
   }
 
   save(session: ChatSession): ChatSession {
-    const sessions = this.readSessions();
-    const index = sessions.findIndex((item) => item.id === session.id);
+    const index = this.sessions.findIndex((item) => item.id === session.id);
 
     if (index >= 0) {
-      sessions[index] = session;
+      this.sessions[index] = session;
     } else {
-      sessions.push(session);
+      this.sessions.push(session);
     }
 
-    this.writeSessions(sessions);
+    this.scheduleWrite();
     return session;
   }
 
   clear(sessionId: string) {
-    const sessions = this.readSessions().filter((session) => session.id !== sessionId);
-    this.writeSessions(sessions);
+    this.sessions = this.sessions.filter((session) => session.id !== sessionId);
+    this.scheduleWrite();
   }
 
-  private readSessions(): ChatSession[] {
+  flush() {
+    if (this.writeTimer) {
+      clearTimeout(this.writeTimer);
+      this.writeTimer = null;
+    }
+    this.writeSessions(this.sessions);
+  }
+
+  private readSessionsFromDisk(): ChatSession[] {
     if (!existsSync(this.filePath)) {
       return [];
     }
@@ -56,5 +69,15 @@ export class ChatSessionStore {
     mkdirSync(dirname(this.filePath), { recursive: true });
     writeFileSync(this.filePath, JSON.stringify({ sessions }, null, 2));
   }
-}
 
+  private scheduleWrite() {
+    if (this.writeTimer) {
+      clearTimeout(this.writeTimer);
+    }
+
+    this.writeTimer = setTimeout(() => {
+      this.writeTimer = null;
+      this.writeSessions(this.sessions);
+    }, 120);
+  }
+}

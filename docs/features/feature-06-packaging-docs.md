@@ -23,6 +23,7 @@
 - 已新增 `build:icons`、`make`、`make:dir` 脚本
 - 已实现 `SVG -> icns` 图标流水线，并将品牌图标覆写进最终 `.app` 包
 - 已采用 `@electron/packager + ditto + hdiutil` 生成本地 unsigned `.app/.zip/.dmg`
+- 已修正 ZIP 打包对象，确保 ZIP 与 DMG 都以 `Sakurajima.app` 为核心分发内容
 - 已在 `release/` 目录生成：
   - `Sakurajima-darwin-arm64/Sakurajima.app`
   - `Sakurajima-0.1.0-arm64.zip`

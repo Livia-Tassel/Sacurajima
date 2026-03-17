@@ -13,28 +13,41 @@ export default function App() {
   const view = parseWindowView(window.location.search);
 
   const loadSettings = useEffectEvent(async () => {
-    const result = await window.sakurajima.settings.load();
+    try {
+      const result = await window.sakurajima.settings.load();
 
-    if (!result.ok) {
+      if (!result.ok) {
+        startTransition(() => {
+          setConfig(DEFAULT_CONFIG);
+          setConfigLoadError(result.error.message);
+          setConfigLoading(false);
+        });
+        return;
+      }
+
       startTransition(() => {
-        setConfig(DEFAULT_CONFIG);
-        setConfigLoadError(result.error.message);
+        setConfig(result.data);
+        setConfigLoadError('');
         setConfigLoading(false);
       });
-      return;
+    } catch (error) {
+      startTransition(() => {
+        setConfig(DEFAULT_CONFIG);
+        setConfigLoadError(error instanceof Error ? error.message : 'Failed to load settings.');
+        setConfigLoading(false);
+      });
     }
-
-    startTransition(() => {
-      setConfig(result.data);
-      setConfigLoadError('');
-      setConfigLoading(false);
-    });
   });
 
   useEffect(() => {
-    void window.sakurajima.app.getVersion().then((result: AppVersionResponse) => {
-      setVersion(result.version);
-    });
+    void window.sakurajima.app
+      .getVersion()
+      .then((result: AppVersionResponse) => {
+        setVersion(result.version);
+      })
+      .catch(() => {
+        setVersion('unknown');
+      });
     void loadSettings();
   }, [loadSettings]);
 

@@ -27,7 +27,8 @@
 - 已实现托盘菜单，可切换桌宠显隐、打开面板、退出应用
 - 已通过 preload 暴露 `window.togglePanel()` 与 `window.showPanel()`，未向 renderer 暴露额外高权限能力
 - 已补充窗口避让逻辑：panel 显示时会自动尝试避开 companion
-- 已补充 panel 顶部拖动条，降低移动窗口的发现成本
+- 已将 panel 恢复为原生标题栏拖动方式，以保证表单交互稳定
+- 已修正一处交互回归：panel 打开时不再无条件剥夺 companion 的聚焦/拖动能力
 
 ## 验证结果
 

@@ -20,43 +20,58 @@ type StatusState = {
 } | null;
 
 export function PanelView({ config, loadError, loading, onSaved, version }: PanelViewProps) {
-  const [tab, setTab] = useState<'chat' | 'settings'>(hasEssentialConfig(config) ? 'chat' : 'settings');
+  const [tab, setTab] = useState<'chat' | 'settings'>('settings');
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatBusy, setChatBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState<StatusState>(null);
+  const [didHydrateInitialView, setDidHydrateInitialView] = useState(false);
 
   const loadSession = useEffectEvent(async (sessionId: string) => {
-    const result = await window.sakurajima.history.get(sessionId);
-    if (!result.ok) {
+    try {
+      const result = await window.sakurajima.history.get(sessionId);
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        return;
+      }
+
+      setActiveSessionId(result.data.id);
+      setMessages(result.data.messages);
+      setTab('chat');
+    } catch (error) {
       setChatStatus({
         tone: 'error',
-        text: result.error.message
+        text: error instanceof Error ? error.message : 'Failed to load the selected session.'
       });
-      return;
     }
-
-    setActiveSessionId(result.data.id);
-    setMessages(result.data.messages);
-    setTab('chat');
   });
 
   const refreshHistory = useEffectEvent(async () => {
-    const result = await window.sakurajima.history.list();
-    if (!result.ok) {
+    try {
+      const result = await window.sakurajima.history.list();
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        return;
+      }
+
+      setSessions(result.data);
+
+      if (!activeSessionId && result.data[0]) {
+        void loadSession(result.data[0].id);
+      }
+    } catch (error) {
       setChatStatus({
         tone: 'error',
-        text: result.error.message
+        text: error instanceof Error ? error.message : 'Failed to load chat history.'
       });
-      return;
-    }
-
-    setSessions(result.data);
-
-    if (!activeSessionId && result.data[0]) {
-      void loadSession(result.data[0].id);
     }
   });
 
@@ -153,13 +168,11 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       return;
     }
 
-    if (hasEssentialConfig(config) && !loadError) {
-      setTab('chat');
-      return;
+    if (!didHydrateInitialView) {
+      setTab(hasEssentialConfig(config) && !loadError ? 'chat' : 'settings');
+      setDidHydrateInitialView(true);
     }
-
-    setTab('settings');
-  }, [config, loadError, loading]);
+  }, [config, didHydrateInitialView, loadError, loading]);
 
   const canChat = hasEssentialConfig(config);
 
@@ -175,38 +188,52 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       return;
     }
 
-    const result = await window.sakurajima.history.clear(activeSessionId);
-    if (!result.ok) {
+    try {
+      const result = await window.sakurajima.history.clear(activeSessionId);
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        return;
+      }
+
+      setSessions((current) => current.filter((session) => session.id !== result.data.sessionId));
+      setActiveSessionId(null);
+      setMessages([]);
+      setChatBusy(false);
+    } catch (error) {
       setChatStatus({
         tone: 'error',
-        text: result.error.message
+        text: error instanceof Error ? error.message : 'Failed to clear the current session.'
       });
-      return;
     }
-
-    setSessions((current) => current.filter((session) => session.id !== result.data.sessionId));
-    setActiveSessionId(null);
-    setMessages([]);
-    setChatBusy(false);
   };
 
   const sendMessage = async () => {
-    const result = await window.sakurajima.chat.send(chatInput, activeSessionId ?? undefined);
-    if (!result.ok) {
+    try {
+      const result = await window.sakurajima.chat.send(chatInput, activeSessionId ?? undefined);
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        if (result.error.code === 'MISSING_CONFIG') {
+          setTab('settings');
+        }
+        return;
+      }
+
+      setChatInput('');
+      setActiveSessionId(result.data.sessionId);
+      setChatBusy(true);
+      setChatStatus(null);
+    } catch (error) {
       setChatStatus({
         tone: 'error',
-        text: result.error.message
+        text: error instanceof Error ? error.message : 'Failed to send the message.'
       });
-      if (result.error.code === 'MISSING_CONFIG') {
-        setTab('settings');
-      }
-      return;
     }
-
-    setChatInput('');
-    setActiveSessionId(result.data.sessionId);
-    setChatBusy(true);
-    setChatStatus(null);
   };
 
   const abortMessage = async () => {
@@ -214,14 +241,18 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       return;
     }
 
-    await window.sakurajima.chat.abort(activeSessionId);
+    try {
+      await window.sakurajima.chat.abort(activeSessionId);
+    } catch (error) {
+      setChatStatus({
+        tone: 'error',
+        text: error instanceof Error ? error.message : 'Failed to abort the current response.'
+      });
+    }
   };
 
   return (
     <main className="panel-root">
-      <div className="panel-window-bar" aria-hidden="true">
-        <span className="panel-window-grip">Move Window</span>
-      </div>
       <section className="panel-shell">
         <aside className="panel-sidebar">
           <div>

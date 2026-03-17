@@ -35,14 +35,29 @@ export class ConfigStore {
   private readonly filePath = join(app.getPath('userData'), 'app-config.json');
 
   load(): IpcResult<AppConfigView> {
+    const { stored, corrupted } = this.readStoredState();
+    if (corrupted) {
+      return {
+        ok: false,
+        error: createError('INVALID_RESPONSE', 'The saved configuration file is unreadable or corrupted.', false)
+      };
+    }
+
     return {
       ok: true,
-      data: this.readView()
+      data: stored ? this.toView(stored) : DEFAULT_CONFIG
     };
   }
 
   save(input: AppConfigInput): IpcResult<AppConfigView> {
-    const existing = this.readStored();
+    const { stored: existing, corrupted } = this.readStoredState();
+    if (corrupted) {
+      return {
+        ok: false,
+        error: createError('INVALID_RESPONSE', 'The saved configuration file is unreadable or corrupted.', false)
+      };
+    }
+
     const validationError = this.validate(input, Boolean(existing?.apiKeyEncrypted));
 
     if (validationError) {
@@ -203,7 +218,13 @@ export class ConfigStore {
   }
 
   resolve(input?: AppConfigInput): IpcResult<ResolvedAppConfig> {
-    const existing = this.readStored();
+    const { stored: existing, corrupted } = this.readStoredState();
+    if (corrupted) {
+      return {
+        ok: false,
+        error: createError('INVALID_RESPONSE', 'The saved configuration file is unreadable or corrupted.', false)
+      };
+    }
 
     if (!existing && !input) {
       return {
@@ -282,6 +303,17 @@ export class ConfigStore {
       return createError('VALIDATION_ERROR', 'Base URL is required for the custom provider preset.', false);
     }
 
+    if (
+      input.providerPreset === 'custom' &&
+      /\/(models|chat\/completions)\/?$/i.test(baseUrl)
+    ) {
+      return createError(
+        'VALIDATION_ERROR',
+        'Use the API base URL, not a full /models or /chat/completions endpoint.',
+        false
+      );
+    }
+
     if (!input.model.trim()) {
       return createError('VALIDATION_ERROR', 'Model is required.', false);
     }
@@ -331,24 +363,22 @@ export class ConfigStore {
       model: stored.model,
       systemPrompt: stored.systemPrompt,
       temperature: stored.temperature,
-      hasApiKey: Boolean(stored.apiKeyEncrypted)
+      hasApiKey: Boolean(this.decryptApiKey(stored.apiKeyEncrypted))
     };
   }
 
-  private readView(): AppConfigView {
-    const stored = this.readStored();
-    return stored ? this.toView(stored) : DEFAULT_CONFIG;
-  }
-
-  private readStored(): StoredAppConfig | null {
+  private readStoredState(): { stored: StoredAppConfig | null; corrupted: boolean } {
     if (!existsSync(this.filePath)) {
-      return null;
+      return { stored: null, corrupted: false };
     }
 
     try {
-      return JSON.parse(readFileSync(this.filePath, 'utf8')) as StoredAppConfig;
+      return {
+        stored: JSON.parse(readFileSync(this.filePath, 'utf8')) as StoredAppConfig,
+        corrupted: false
+      };
     } catch {
-      return null;
+      return { stored: null, corrupted: true };
     }
   }
 
