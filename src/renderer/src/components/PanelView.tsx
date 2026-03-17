@@ -149,10 +149,17 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   }, [handleChatEvent]);
 
   useEffect(() => {
-    if (!hasEssentialConfig(config)) {
-      setTab('settings');
+    if (loading) {
+      return;
     }
-  }, [config]);
+
+    if (hasEssentialConfig(config) && !loadError) {
+      setTab('chat');
+      return;
+    }
+
+    setTab('settings');
+  }, [config, loadError, loading]);
 
   const canChat = hasEssentialConfig(config);
 

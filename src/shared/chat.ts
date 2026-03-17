@@ -1,5 +1,7 @@
 import type { IpcError } from './config';
 
+export const MAX_CHAT_MESSAGE_CHARS = 4_000;
+
 export type ChatMessage = {
   id: string;
   role: 'system' | 'user' | 'assistant';
@@ -52,4 +54,3 @@ export function toSessionSummary(session: ChatSession): SessionSummary {
     lastMessagePreview: lastMessage?.content.slice(0, 80) ?? ''
   };
 }
-

@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { ConfigStore } from './config-store';
 import { ChatSessionStore } from './chat-session-store';
 import {
+  MAX_CHAT_MESSAGE_CHARS,
   deriveSessionTitle,
   type ChatEvent,
   type ChatMessage,
@@ -86,6 +87,16 @@ export class ChatService {
       return {
         ok: false,
         error: createError('VALIDATION_ERROR', 'Message cannot be empty.', false)
+      };
+    }
+    if (trimmedMessage.length > MAX_CHAT_MESSAGE_CHARS) {
+      return {
+        ok: false,
+        error: createError(
+          'VALIDATION_ERROR',
+          `Message cannot exceed ${MAX_CHAT_MESSAGE_CHARS} characters.`,
+          false
+        )
       };
     }
 
@@ -264,7 +275,7 @@ export class ChatService {
         break;
       }
 
-      buffer += decoder.decode(value, { stream: true });
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
       const chunks = buffer.split('\n\n');
       buffer = chunks.pop() ?? '';
 
@@ -448,4 +459,3 @@ export class ChatService {
     }
   }
 }
-

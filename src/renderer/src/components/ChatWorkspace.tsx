@@ -1,4 +1,4 @@
-import type { ChatMessage } from '../../../shared/chat';
+import { MAX_CHAT_MESSAGE_CHARS, type ChatMessage } from '../../../shared/chat';
 
 import { MascotArtwork } from './MascotArtwork';
 
@@ -94,6 +94,7 @@ export function ChatWorkspace({
       <section className="chat-composer">
         <textarea
           disabled={!configReady}
+          maxLength={MAX_CHAT_MESSAGE_CHARS}
           onChange={(event) => onInputChange(event.target.value)}
           placeholder={
             configReady
@@ -104,7 +105,9 @@ export function ChatWorkspace({
           value={input}
         />
         <div className="chat-composer-actions">
-          <span className="settings-hint">Messages stay local unless sent to your configured API.</span>
+          <span className="settings-hint">
+            Messages stay local unless sent to your configured API. {input.length}/{MAX_CHAT_MESSAGE_CHARS}
+          </span>
           <button
             className="settings-button"
             disabled={!configReady || busy || !input.trim()}

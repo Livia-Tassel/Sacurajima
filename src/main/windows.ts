@@ -5,7 +5,7 @@ import { WindowStateStore } from './window-state-store';
 import type { WindowKind } from '../shared/window-state';
 
 const isDev = !app.isPackaged;
-const preloadPath = join(__dirname, '../preload/index.mjs');
+const preloadPath = join(__dirname, '../preload/index.js');
 
 function windowUrl(view: 'companion' | 'panel') {
   if (isDev && process.env.ELECTRON_RENDERER_URL) {
