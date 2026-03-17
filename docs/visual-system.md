@@ -37,10 +37,24 @@
 - 形象方向：樱花主题少女风桌宠，柔和配色，透明背景
 - v1 状态图至少覆盖 `idle / happy / thinking / sleepy / error`
 
+## 资产清单
+
+- `sakurajima-idle`：默认桌宠状态
+- `sakurajima-happy`：连接成功、完成回应
+- `sakurajima-thinking`：聊天生成中
+- `sakurajima-sleepy`：未完成配置或低打扰状态
+- `sakurajima-error`：错误提示状态
+- `sakura-mark`：品牌标识与按钮装饰
+
+## 当前落地策略
+
+- 当前开发环境未配置图片生成所需 `OPENAI_API_KEY`
+- Feature 5 先内置统一风格 SVG 资产，确保应用可直接使用
+- 后续若补齐图片生成环境，可在不改动组件结构的前提下替换为更精细的生成式资产
+
 ## 动效
 
 - 轻微呼吸
 - 偶发眨眼
 - 面板滑入
 - 柔和背景光晕
-

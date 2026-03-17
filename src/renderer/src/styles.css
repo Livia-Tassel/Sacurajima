@@ -58,6 +58,26 @@ body {
   font-size: 2rem;
 }
 
+.panel-brand-lockup,
+.settings-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-brand-mark,
+.settings-mark {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+}
+
+.panel-brand-art {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 auto;
+}
+
 .panel-copy {
   margin: 16px 0 0;
   line-height: 1.7;
@@ -399,6 +419,11 @@ body {
   padding: 24px;
 }
 
+.chat-empty-illustration {
+  width: min(180px, 40vw);
+  margin-bottom: 12px;
+}
+
 .chat-bubble {
   max-width: min(80%, 680px);
   padding: 18px 20px;
@@ -478,38 +503,10 @@ body {
     inset 0 0 0 1px rgba(255, 255, 255, 0.7);
 }
 
-.companion-avatar {
-  position: relative;
-  width: 116px;
-  height: 116px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #ffd8e6, #fff8fb);
-  overflow: hidden;
-  box-shadow: inset 0 -10px 16px rgba(255, 150, 197, 0.2);
-}
-
-.companion-hair {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.9), transparent 16%),
-    linear-gradient(180deg, #ff99c1 0%, #f07baa 56%, #efc1d2 100%);
-  border-radius: 50% 50% 42% 42%;
-}
-
-.companion-face {
-  position: absolute;
-  inset: 34px 22px 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.eye {
-  width: 10px;
-  height: 18px;
-  border-radius: 999px;
-  background: #5a405e;
+.companion-illustration {
+  width: 126px;
+  height: auto;
+  animation: companionFloat 4.8s ease-in-out infinite;
 }
 
 .companion-name {
@@ -538,6 +535,17 @@ body {
   cursor: pointer;
   -webkit-app-region: no-drag;
   box-shadow: 0 12px 18px rgba(242, 122, 169, 0.3);
+}
+
+@keyframes companionFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @media (max-width: 920px) {

@@ -8,6 +8,7 @@ import {
   type ConnectionTestResult,
   type IpcError
 } from '../../../shared/config';
+import { BrandMark } from './BrandMark';
 
 type SettingsFormProps = {
   config: AppConfigView;
@@ -114,7 +115,10 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
       <section className="settings-section">
         <div className="settings-header">
           <div>
-            <p className="panel-kicker">Onboarding</p>
+            <div className="settings-lockup">
+              <BrandMark alt="Sakurajima brand mark" className="settings-mark" />
+              <p className="panel-kicker">Onboarding</p>
+            </div>
             <h2 className="settings-title">Connect your OpenAI-compatible API</h2>
           </div>
           {config.hasApiKey ? <span className="settings-badge">API Key saved securely</span> : null}
@@ -284,4 +288,3 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
     </div>
   );
 }
-

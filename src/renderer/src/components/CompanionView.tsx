@@ -1,3 +1,5 @@
+import { MascotArtwork } from './MascotArtwork';
+
 type CompanionViewProps = {
   hasConfig: boolean;
   version: string;
@@ -10,13 +12,11 @@ export function CompanionView({ hasConfig, version, onOpenPanel }: CompanionView
       <section className="companion-shell">
         <div className="companion-aura" />
         <div className="companion-card">
-          <div className="companion-avatar">
-            <div className="companion-hair" />
-            <div className="companion-face">
-              <span className="eye" />
-              <span className="eye" />
-            </div>
-          </div>
+          <MascotArtwork
+            alt="Sakurajima companion"
+            className="companion-illustration"
+            variant={hasConfig ? 'idle' : 'sleepy'}
+          />
           <p className="companion-name">Sakurajima</p>
           <p className="companion-mood">
             {hasConfig

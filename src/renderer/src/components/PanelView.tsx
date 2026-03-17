@@ -1,7 +1,9 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { hasEssentialConfig, type AppConfigView } from '../../../shared/config';
 import { toSessionSummary, type ChatEvent, type ChatMessage, type SessionSummary } from '../../../shared/chat';
+import { BrandMark } from './BrandMark';
 import { ChatWorkspace } from './ChatWorkspace';
+import { MascotArtwork } from './MascotArtwork';
 import { SettingsForm } from './SettingsForm';
 
 type PanelViewProps = {
@@ -213,7 +215,11 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       <section className="panel-shell">
         <aside className="panel-sidebar">
           <div>
-            <p className="panel-kicker">Desktop Companion</p>
+            <div className="panel-brand-lockup">
+              <BrandMark alt="Sakurajima brand mark" className="panel-brand-mark" />
+              <MascotArtwork alt="Sakurajima mascot" className="panel-brand-art" variant="happy" />
+              <p className="panel-kicker">Desktop Companion</p>
+            </div>
             <h1>Sakurajima</h1>
             <p className="panel-copy">
               Configure New API or any OpenAI-compatible endpoint here. Chat and

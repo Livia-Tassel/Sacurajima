@@ -1,5 +1,7 @@
 import type { ChatMessage } from '../../../shared/chat';
 
+import { MascotArtwork } from './MascotArtwork';
+
 type ChatWorkspaceProps = {
   activeSessionId: string | null;
   busy: boolean;
@@ -64,6 +66,11 @@ export function ChatWorkspace({
       <section className="chat-transcript">
         {visibleMessages.length === 0 ? (
           <div className="chat-empty-state">
+            <MascotArtwork
+              alt="Sakurajima"
+              className="chat-empty-illustration"
+              variant={configReady ? (busy ? 'thinking' : 'happy') : 'sleepy'}
+            />
             <p className="panel-label">No messages yet</p>
             <p className="panel-value">
               {configReady
@@ -111,4 +118,3 @@ export function ChatWorkspace({
     </div>
   );
 }
-
