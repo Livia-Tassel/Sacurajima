@@ -371,7 +371,7 @@ body {
 
 .companion-root {
   min-height: 100vh;
-  padding: 18px 8px 12px;
+  padding: 8px 4px 10px;
   background: transparent;
 }
 
@@ -492,26 +492,23 @@ body {
 
 .companion-aura {
   position: absolute;
-  inset: 18px 22px 14px;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 146, 190, 0.44), rgba(255, 146, 190, 0));
-  filter: blur(12px);
+  inset: 38px 18px 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 170, 201, 0.42), rgba(255, 170, 201, 0));
+  filter: blur(22px);
 }
 
 .companion-card {
   position: relative;
-  min-height: calc(100vh - 30px);
-  border-radius: 999px 999px 40px 40px;
-  padding: 18px 18px 22px;
+  min-height: calc(100vh - 18px);
+  border-radius: 28px;
+  padding: 14px 12px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: linear-gradient(180deg, rgba(255, 250, 252, 0.95), rgba(253, 239, 244, 0.9));
-  box-shadow:
-    0 18px 40px rgba(128, 68, 101, 0.2),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  justify-content: flex-end;
+  gap: 12px;
+  background: transparent;
   -webkit-app-region: drag;
   cursor: move;
 }
@@ -530,46 +527,80 @@ body {
 .companion-window-grip {
   padding: 5px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.46);
   color: #b46d91;
   font-size: 0.64rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
+.companion-status-chip {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 250, 252, 0.72);
+  color: #b1658d;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 8px 18px rgba(125, 79, 108, 0.12);
+}
+
 .companion-illustration {
-  width: 126px;
+  width: 224px;
   height: auto;
+  margin-top: 24px;
   animation: companionFloat 4.8s ease-in-out infinite;
   pointer-events: none;
+  filter: drop-shadow(0 18px 28px rgba(114, 68, 98, 0.18));
+}
+
+.companion-footer {
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 8px 6px;
+  -webkit-app-region: no-drag;
 }
 
 .companion-name {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: 700;
-}
-
-.companion-mood {
-  margin: 0;
-  max-width: 18ch;
-  text-align: center;
-  line-height: 1.6;
-  color: #775f7c;
+  color: #4b3850;
 }
 
 .companion-trigger {
-  margin-top: 6px;
-  padding: 12px 18px;
+  padding: 10px 14px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(180deg, #ff9fc2, #f27aa9);
+  background: linear-gradient(180deg, rgba(255, 165, 197, 0.96), rgba(239, 121, 170, 0.96));
   color: white;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
   -webkit-app-region: no-drag;
   box-shadow: 0 12px 18px rgba(242, 122, 169, 0.3);
+}
+
+.companion-card-thinking .companion-status-chip {
+  background: rgba(244, 236, 255, 0.82);
+  color: #8967a8;
+}
+
+.companion-card-happy .companion-status-chip {
+  background: rgba(255, 241, 246, 0.84);
+  color: #cb6f92;
+}
+
+.companion-card-error .companion-status-chip {
+  background: rgba(255, 236, 241, 0.84);
+  color: #cf617b;
 }
 
 @keyframes companionFloat {

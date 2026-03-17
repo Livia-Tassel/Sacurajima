@@ -13,10 +13,10 @@ import {
 function createDefaultState(workArea: RectLike): PersistedWindowState {
   return {
     companion: {
-      x: workArea.x + workArea.width - 220,
-      y: workArea.y + 92,
-      width: 180,
-      height: 220,
+      x: workArea.x + workArea.width - 320,
+      y: workArea.y + 72,
+      width: 260,
+      height: 360,
       visible: true
     },
     panel: {
