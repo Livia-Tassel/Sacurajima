@@ -12,6 +12,9 @@ export function CompanionView({ hasConfig, version, onOpenPanel }: CompanionView
       <section className="companion-shell">
         <div className="companion-aura" />
         <div className="companion-card">
+          <div className="companion-window-bar" aria-hidden="true">
+            <span className="companion-window-grip">Move Companion</span>
+          </div>
           <MascotArtwork
             alt="Sakurajima companion"
             className="companion-illustration"
