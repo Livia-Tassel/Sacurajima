@@ -28,6 +28,7 @@
 1. Renderer 通过 preload API 发起设置保存、连接测试、聊天请求
 2. Main 负责校验入参、读取配置、请求网络、持久化状态
 3. Renderer 只消费结构化返回值，不直接访问文件系统或网络配置
+4. 聊天增量内容通过主进程事件广播回到 renderer，由 renderer 负责增量渲染
 
 ## 存储策略
 
@@ -35,6 +36,7 @@
 - API Key：Electron `safeStorage` 加密后存储
 - 会话历史：本地 JSON store，按 session 组织
 - 窗口状态：独立持久化，包含位置、尺寸、可见性
+- 进行中的聊天请求：仅保存在主进程内存，用 `AbortController` 管理
 
 ## 状态恢复
 

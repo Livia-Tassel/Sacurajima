@@ -86,6 +86,17 @@ type ChatSession = {
 };
 ```
 
+## ChatEvent
+
+```ts
+type ChatEvent =
+  | { type: 'chat-start'; session: ChatSession }
+  | { type: 'chat-delta'; sessionId: string; messageId: string; delta: string }
+  | { type: 'chat-complete'; session: ChatSession }
+  | { type: 'chat-error'; session: ChatSession; error: IpcError }
+  | { type: 'chat-abort'; session: ChatSession };
+```
+
 ## CompanionMood
 
 ```ts

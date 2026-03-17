@@ -1,4 +1,6 @@
 import { app, BrowserWindow, ipcMain, Tray } from 'electron';
+import { ChatService } from './chat-service';
+import { ChatSessionStore } from './chat-session-store';
 import { ConfigStore } from './config-store';
 import { createAppTray } from './tray';
 import { runtimeState } from './runtime-state';
@@ -63,6 +65,10 @@ if (singleInstance) {
 
   app.whenReady().then(() => {
     const configStore = new ConfigStore();
+    const chatSessionStore = new ChatSessionStore();
+    const chatService = new ChatService(configStore, chatSessionStore, () =>
+      [companionWindow, panelWindow].filter((window): window is BrowserWindow => Boolean(window))
+    );
     const windowStateStore = new WindowStateStore();
 
     companionWindow = createCompanionWindow(windowStateStore);
@@ -85,6 +91,11 @@ if (singleInstance) {
     ipcMain.handle('app:get-version', () => ({
       version: app.getVersion()
     }));
+    ipcMain.handle('chat:send', (_event, message, sessionId) => chatService.send(message, sessionId));
+    ipcMain.handle('chat:abort', (_event, sessionId) => chatService.abort(sessionId));
+    ipcMain.handle('history:list', () => chatService.listHistory());
+    ipcMain.handle('history:get', (_event, sessionId) => chatService.getHistory(sessionId));
+    ipcMain.handle('history:clear', (_event, sessionId) => chatService.clearHistory(sessionId));
     ipcMain.handle('settings:load', () => configStore.load());
     ipcMain.handle('settings:save', (_event, config) => configStore.save(config));
     ipcMain.handle('settings:test-connection', (_event, config) => configStore.testConnection(config));

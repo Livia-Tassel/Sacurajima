@@ -5,6 +5,27 @@ const api: SakurajimaPreloadApi = {
   app: {
     getVersion: () => ipcRenderer.invoke('app:get-version')
   },
+  chat: {
+    send: (message, sessionId) => ipcRenderer.invoke('chat:send', message, sessionId),
+    abort: (sessionId) => ipcRenderer.invoke('chat:abort', sessionId)
+  },
+  history: {
+    list: () => ipcRenderer.invoke('history:list'),
+    get: (sessionId) => ipcRenderer.invoke('history:get', sessionId),
+    clear: (sessionId) => ipcRenderer.invoke('history:clear', sessionId)
+  },
+  events: {
+    onChatEvent: (callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, payload: Parameters<typeof callback>[0]) => {
+        callback(payload);
+      };
+
+      ipcRenderer.on('chat:event', listener);
+      return () => {
+        ipcRenderer.removeListener('chat:event', listener);
+      };
+    }
+  },
   settings: {
     load: () => ipcRenderer.invoke('settings:load'),
     save: (config) => ipcRenderer.invoke('settings:save', config),

@@ -81,8 +81,26 @@ body {
   box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.08);
 }
 
+.panel-session.active {
+  background: linear-gradient(180deg, #fff0f6, #fff7fb);
+  box-shadow:
+    inset 0 0 0 1px rgba(155, 96, 130, 0.16),
+    0 10px 16px rgba(159, 94, 130, 0.12);
+}
+
 .panel-session-static {
   cursor: default;
+}
+
+.panel-sidebar-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.panel-sidebar-button,
+.panel-tab-button {
+  width: 100%;
+  justify-content: center;
 }
 
 .panel-content {
@@ -326,6 +344,110 @@ body {
   background: transparent;
 }
 
+.chat-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.chat-hero-card,
+.chat-transcript,
+.chat-composer,
+.chat-toolbar {
+  padding: 24px 28px;
+  border-radius: 28px;
+  background: var(--color-panel);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.08);
+}
+
+.chat-hero-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.chat-hero-card h2 {
+  margin: 10px 0 0;
+  font-size: 1.9rem;
+  line-height: 1.08;
+}
+
+.chat-hero-card p:not(.panel-kicker) {
+  margin: 14px 0 0;
+  line-height: 1.7;
+  max-width: 48ch;
+}
+
+.chat-hero-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-transcript {
+  min-height: 360px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  overflow: auto;
+}
+
+.chat-empty-state {
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.chat-bubble {
+  max-width: min(80%, 680px);
+  padding: 18px 20px;
+  border-radius: 22px 22px 22px 8px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.08);
+}
+
+.chat-bubble-user {
+  margin-left: auto;
+  border-radius: 22px 22px 8px 22px;
+  background: linear-gradient(180deg, #fff0f6, #ffe6ef);
+}
+
+.chat-content {
+  margin: 10px 0 0;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.chat-composer {
+  display: grid;
+  gap: 14px;
+}
+
+.chat-composer textarea {
+  width: 100%;
+  border: 0;
+  border-radius: 22px;
+  padding: 16px 18px;
+  resize: vertical;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--color-ink);
+  font: inherit;
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.12);
+}
+
+.chat-composer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.chat-toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .companion-shell {
   position: relative;
   min-height: 100%;
@@ -426,6 +548,12 @@ body {
   .settings-meta-grid,
   .field-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chat-hero-card,
+  .chat-composer-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .settings-header {

@@ -48,7 +48,7 @@
 - 返回：
   - `ok: true`
   - `data: { sessionId: string }`
-  - 通过事件流推送增量内容
+  - 通过 `events.onChatEvent` 推送增量内容
 
 ## `chat.abort(sessionId)`
 
@@ -59,14 +59,23 @@
 ## `history.list()`
 
 - 作用：获取会话摘要列表
+- 返回：
+  - `ok: true`
+  - `data: SessionSummary[]`
 
 ## `history.get(sessionId)`
 
 - 作用：获取完整会话
+- 返回：
+  - `ok: true`
+  - `data: ChatSession`
 
 ## `history.clear(sessionId)`
 
 - 作用：清理单个会话
+- 返回：
+  - `ok: true`
+  - `data: { sessionId: string }`
 
 ## `window.togglePanel()`
 
@@ -89,4 +98,4 @@
   - `chat-delta`
   - `chat-complete`
   - `chat-error`
-  - `session-updated`
+  - `chat-abort`
