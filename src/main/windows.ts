@@ -5,6 +5,7 @@ import { WindowStateStore } from './window-state-store';
 import type { WindowKind } from '../shared/window-state';
 
 const isDev = !app.isPackaged;
+const preloadPath = join(__dirname, '../preload/index.mjs');
 
 function windowUrl(view: 'companion' | 'panel') {
   if (isDev && process.env.ELECTRON_RENDERER_URL) {
@@ -53,7 +54,7 @@ export function createCompanionWindow(stateStore: WindowStateStore) {
     alwaysOnTop: true,
     title: 'Sakurajima Companion',
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true
@@ -93,7 +94,7 @@ export function createPanelWindow(stateStore: WindowStateStore) {
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 18, y: 16 },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true
