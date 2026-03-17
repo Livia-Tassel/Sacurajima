@@ -48,4 +48,4 @@
 
 - 聊天能力：OpenAI-compatible API，优先适配 New API
 - 图片生成：仅开发阶段资产生产，非运行时依赖
-- 打包：electron-builder
+- 打包：`@electron/packager` + `ditto` + `hdiutil`

@@ -11,3 +11,13 @@ Sakurajima 是一个本地运行的可爱陪伴桌面系统。v1 以 macOS 为�
 
 详细规范见 [docs/process.md](docs/process.md)。
 
+## 常用命令
+
+- `npm install`
+- `npm run dev`
+- `npm test`
+- `npm run build`
+- `npm run make`
+
+用户上手和排障见 [docs/quickstart.md](docs/quickstart.md) 与 [docs/troubleshooting.md](docs/troubleshooting.md)。
+

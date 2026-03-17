@@ -9,17 +9,21 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
+    "build:icons": "node ./scripts/build-macos-icon.mjs",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "npm run test:unit && npm run test:docs",
     "test:unit": "tsx --test src/**/*.test.ts",
-    "test:docs": "node ./scripts/check-docs-consistency.mjs"
+    "test:docs": "node ./scripts/check-docs-consistency.mjs",
+    "make": "npm run build:icons && npm run build && node ./scripts/make-macos.mjs",
+    "make:dir": "npm run build:icons && npm run build && node ./scripts/make-macos.mjs --dir"
   },
   "dependencies": {
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@electron/packager": "^19.1.0",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",

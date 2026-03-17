@@ -12,6 +12,8 @@ const requiredFiles = [
   'docs/security.md',
   'docs/testing.md',
   'docs/process.md',
+  'docs/quickstart.md',
+  'docs/troubleshooting.md',
   'docs/api/openai-compatible.yaml',
   'docs/adr/0001-electron-vite-react.md',
   'docs/features/feature-01-foundation.md',
@@ -41,4 +43,3 @@ if (missing.length > 0) {
 }
 
 console.log(`Documentation consistency check passed for ${requiredFiles.length} files.`);
-
