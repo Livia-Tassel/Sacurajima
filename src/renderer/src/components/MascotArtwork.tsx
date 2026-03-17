@@ -1,8 +1,8 @@
-import happyArt from '../assets/illustrations/sakurajima-happy.svg';
-import idleArt from '../assets/illustrations/sakurajima-idle.svg';
-import thinkingArt from '../assets/illustrations/sakurajima-thinking.svg';
-import sleepyArt from '../assets/illustrations/sakurajima-sleepy.svg';
-import errorArt from '../assets/illustrations/sakurajima-error.svg';
+import happyArt from '../../../../assets/sakurajima-happy.png';
+import idleArt from '../../../../assets/sakurajima-idle.png';
+import thinkingArt from '../../../../assets/sakurajima-thinking.png';
+import sleepyArt from '../../../../assets/sakurajima-sleepy.png';
+import errorArt from '../../../../assets/sakurajima-error.png';
 
 const artworkMap = {
   error: errorArt,
@@ -21,4 +21,3 @@ type MascotArtworkProps = {
 export function MascotArtwork({ alt, className, variant }: MascotArtworkProps) {
   return <img alt={alt} className={className} src={artworkMap[variant]} />;
 }
-
