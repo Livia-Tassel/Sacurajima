@@ -1,0 +1,78 @@
+:root {
+  color-scheme: light;
+  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(255, 176, 204, 0.55), transparent 34%),
+    linear-gradient(180deg, #fff7f3 0%, #f3eef7 100%);
+  color: #443247;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+}
+
+.hero-card {
+  width: min(760px, 100%);
+  padding: 40px;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 24px 80px rgba(102, 55, 89, 0.16);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c96d96;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 1;
+}
+
+.tagline {
+  margin: 14px 0 0;
+  font-size: 1.1rem;
+  color: #6f5b77;
+}
+
+.body {
+  margin: 24px 0 0;
+  max-width: 56ch;
+  line-height: 1.7;
+}
+
+.pill-row {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pill {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #fff0f6;
+  color: #9b4a76;
+  font-weight: 600;
+}
