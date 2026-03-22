@@ -1,8 +1,10 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { hasEssentialConfig, type AppConfigView } from '../../../shared/config';
 import { toSessionSummary, type ChatEvent, type ChatMessage, type SessionSummary } from '../../../shared/chat';
+import type { CompanionMood } from '../../../shared/companion';
 import { BrandMark } from './BrandMark';
 import { ChatWorkspace } from './ChatWorkspace';
+import { CompanionStatusCard } from './CompanionStatusCard';
 import { MascotArtwork } from './MascotArtwork';
 import { SettingsForm } from './SettingsForm';
 
@@ -28,6 +30,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   const [chatBusy, setChatBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState<StatusState>(null);
   const [didHydrateInitialView, setDidHydrateInitialView] = useState(false);
+  const [companionMood, setCompanionMood] = useState<CompanionMood>('idle');
 
   const loadSession = useEffectEvent(async (sessionId: string) => {
     try {
@@ -86,6 +89,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       setChatBusy(true);
       setChatStatus(null);
       setTab('chat');
+      setCompanionMood('thinking');
       return;
     }
 
@@ -118,6 +122,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       }
       setChatBusy(false);
       setChatStatus(null);
+      setCompanionMood('happy');
       return;
     }
 
@@ -134,6 +139,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
         tone: 'info',
         text: 'Generation stopped.'
       });
+      setCompanionMood('idle');
       return;
     }
 
@@ -149,6 +155,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       tone: 'error',
       text: event.error.message
     });
+    setCompanionMood('error');
   });
 
   useEffect(() => {
@@ -308,20 +315,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
         </aside>
 
         <section className="panel-content">
-          <div className="panel-hero-card">
-            <p className="panel-kicker">Feature 4</p>
-            <h2>Local sessions and streaming chat now live in the panel</h2>
-            <p>
-              The panel now keeps session history locally, streams assistant
-              deltas in place, and falls back to standard JSON completions when
-              the endpoint does not answer with SSE.
-            </p>
-            <div className="panel-pill-row">
-              <span className="panel-pill">Streaming</span>
-              <span className="panel-pill">Abort</span>
-              <span className="panel-pill">Local History</span>
-            </div>
-          </div>
+          <CompanionStatusCard mood={companionMood} />
 
           {tab === 'settings' ? (
             <SettingsForm
