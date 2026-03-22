@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sakurajima — Design Proposals</title>
+<style>
+  :root {
+    --color-blush: #f7c7d9;
+    --color-rose: #ef96b4;
+    --color-cream: #fff7f3;
+    --color-mist: #f3eef7;
+    --color-ink: #443247;
+    --color-accent: #ff8ab2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Avenir Next", "PingFang SC", -apple-system, sans-serif;
+    color: var(--color-ink);
+    background: linear-gradient(135deg, #fff0f8 0%, #f3eef7 100%);
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+  h1 { font-size: 2rem; margin-bottom: 6px; }
+  .subtitle { color: #9a6e8c; margin-bottom: 48px; font-size: 1rem; }
+  .section { margin-bottom: 64px; }
+  .section-label {
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #c96d96;
+    margin-bottom: 12px;
+  }
+  .section-title { font-size: 1.6rem; margin-bottom: 6px; }
+  .section-desc { color: #7a667d; line-height: 1.7; margin-bottom: 28px; max-width: 60ch; }
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .card-label {
+    font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+    color: #b07096; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tag-before { background: #f3e0ea; color: #9a5478; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; }
+  .tag-after  { background: #d6f0e2; color: #2d7a56; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; }
+
+  /* ===== BEFORE: Companion Card ===== */
+  .before-companion {
+    width: 220px;
+    margin: 0 auto;
+    padding: 12px;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.7);
+    box-shadow: 0 4px 20px rgba(100,60,90,0.1);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .before-status { padding: 6px 14px; border-radius: 999px; background: rgba(255,250,252,0.72); color: #b1658d; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .before-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .before-stats span { padding: 4px 8px; border-radius: 999px; font-size: 0.72rem; color: #835b85; background: rgba(255,255,255,0.7); box-shadow: inset 0 0 0 1px rgba(155,96,130,0.13); }
+  .before-exp { width: 200px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.58); overflow: hidden; }
+  .before-exp span { display: block; width: 38%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffc2d8, #ff8ab2); }
+  .before-art { width: 160px; height: 160px; background: rgba(247,199,217,0.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .before-art svg { width: 100px; height: 100px; opacity: 0.5; }
+  .before-footer { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .before-name { font-size: 1rem; font-weight: 700; color: #4b3850; }
+  .before-btn { padding: 8px 12px; border: 0; border-radius: 999px; background: linear-gradient(180deg, rgba(255,165,197,0.96), rgba(239,121,170,0.96)); color: white; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+  .before-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .before-action-btn { border: 0; border-radius: 999px; padding: 7px 10px; background: rgba(255,255,255,0.9); color: #8f5a80; font-size: 0.8rem; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(155,96,130,0.14); }
+
+  /* ===== AFTER: Companion Card — GLOW + BLINK + PARTICLES ===== */
+  .after-companion {
+    width: 220px;
+    margin: 0 auto;
+    padding: 12px;
+    border-radius: 28px;
+    background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(12px);
+    box-shadow:
+      0 4px 32px rgba(239,150,180,0.22),
+      inset 0 0 0 1px rgba(255,200,220,0.45);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    position: relative;
+    overflow: visible;
+  }
+  .after-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 40px;
+    background: radial-gradient(ellipse at 50% 70%, rgba(255,138,178,0.25) 0%, transparent 70%);
+    pointer-events: none;
+    animation: glowPulse 3s ease-in-out infinite;
+    z-index: -1;
+  }
+  .after-status {
+    padding: 6px 14px; border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255,220,235,0.9), rgba(255,200,225,0.9));
+    color: #c0527a; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(239,121,170,0.18);
+    animation: statusShimmer 4s ease-in-out infinite;
+  }
+  .after-stats { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .after-stats span {
+    padding: 4px 8px; border-radius: 999px; font-size: 0.72rem; color: #835b85;
+    background: rgba(255,255,255,0.82);
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.13), 0 2px 6px rgba(155,96,130,0.08);
+    transition: transform 0.15s ease;
+  }
+  .after-exp { width: 200px; height: 7px; border-radius: 999px; background: rgba(255,255,255,0.42); overflow: hidden; box-shadow: inset 0 0 0 1px rgba(155,96,130,0.12); }
+  .after-exp span { display: block; width: 38%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffc2d8, #ff8ab2, #ef70aa); animation: expGlow 2s ease-in-out infinite alternate; }
+  .after-art-wrap {
+    width: 180px; height: 180px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .after-art-halo {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(255,180,210,0.32) 0%, transparent 70%);
+    animation: haloBreath 3.6s ease-in-out infinite;
+  }
+  .after-art {
+    width: 160px; height: 160px;
+    background: rgba(247,199,217,0.35);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    animation: companionFloat 4.8s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+  }
+  .after-art svg { width: 100px; height: 100px; opacity: 0.65; }
+  /* Blinking eyes overlay */
+  .after-art::after {
+    content: '';
+    position: absolute;
+    top: 42%; left: 50%;
+    transform: translateX(-50%);
+    width: 44px; height: 6px;
+    background: linear-gradient(90deg, transparent 2px, #ef96b4 2px, #ef96b4 14px, transparent 14px,
+                                       transparent 30px, #ef96b4 30px, #ef96b4 42px, transparent 42px);
+    border-radius: 3px;
+    animation: blinkEyes 5.5s ease-in-out infinite;
+    opacity: 0;
+  }
+  /* Sparkles */
+  .sparkle {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    pointer-events: none;
+    animation: sparkleRise 1.4s ease-out forwards;
+    opacity: 0;
+  }
+  .sparkle:nth-child(2) { animation-delay: 0.1s; left: 20%; width: 6px; height: 6px; --dx: -18px; }
+  .sparkle:nth-child(3) { animation-delay: 0.25s; left: 70%; width: 10px; height: 10px; --dx: 14px; background: #ffc2d8; }
+  .sparkle:nth-child(4) { animation-delay: 0.35s; left: 45%; width: 6px; height: 6px; --dx: -8px; }
+  .after-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .after-action-btn {
+    border: 0; border-radius: 999px; padding: 7px 10px;
+    background: rgba(255,255,255,0.92); color: #8f5a80; font-size: 0.8rem;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.14), 0 2px 8px rgba(155,96,130,0.07);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .after-action-btn:hover { transform: translateY(-1px); box-shadow: inset 0 0 0 1px rgba(155,96,130,0.2), 0 6px 14px rgba(155,96,130,0.14); }
+  .after-footer { width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .after-name { font-size: 1rem; font-weight: 700; color: #4b3850; }
+  .after-btn {
+    padding: 8px 14px; border: 0; border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255,165,197,0.96), rgba(239,121,170,0.96));
+    color: white; font-size: 0.8rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 8px 16px rgba(239,121,170,0.32);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .after-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 20px rgba(239,121,170,0.4); }
+
+  /* ===== BEFORE: Panel Hero Card ===== */
+  .before-panel {
+    border-radius: 28px; padding: 28px;
+    background: rgba(255,255,255,0.8);
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.08);
+  }
+  .pkicker { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: #c96d96; }
+  .phero h2 { margin: 12px 0 0; font-size: 1.8rem; line-height: 1.1; }
+  .phero p { margin: 14px 0 0; line-height: 1.7; color: #6e5a76; max-width: 44ch; }
+  .ppills { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .ppill { padding: 8px 14px; border-radius: 999px; background: #fff0f6; color: #9b4a76; font-weight: 700; font-size: 0.88rem; }
+
+  /* ===== AFTER: Companion Status Card ===== */
+  .after-panel {
+    border-radius: 28px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 0 0 1px rgba(255,200,225,0.35), 0 8px 32px rgba(155,96,130,0.09);
+    overflow: hidden;
+  }
+  .apc-header {
+    padding: 22px 28px 16px;
+    background: linear-gradient(180deg, rgba(255,235,245,0.85), transparent);
+    border-bottom: 1px solid rgba(155,96,130,0.07);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .apc-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #ffc2d8, #ef96b4);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 16px rgba(239,150,180,0.35);
+    flex: 0 0 auto;
+    animation: companionFloat 4.8s ease-in-out infinite;
+  }
+  .apc-avatar svg { width: 32px; height: 32px; }
+  .apc-meta { flex: 1; }
+  .apc-name { font-size: 1rem; font-weight: 700; color: #4b3850; }
+  .apc-mood {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 4px; padding: 3px 10px; border-radius: 999px;
+    background: rgba(255,230,242,0.9); color: #c0527a;
+    font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .mood-dot { width: 6px; height: 6px; border-radius: 50%; background: #ef96b4; animation: dotPulse 2s ease-in-out infinite; }
+  .apc-stats-row {
+    padding: 16px 28px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+  }
+  .apc-stat {
+    text-align: center; padding: 12px 8px; border-radius: 18px;
+    background: rgba(255,255,255,0.75);
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.08);
+  }
+  .apc-stat-val { font-size: 1.3rem; font-weight: 700; color: #6b3e62; }
+  .apc-stat-key { font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: #b07096; margin-top: 3px; }
+  .apc-exp-row { padding: 0 28px 18px; }
+  .apc-exp-label { font-size: 0.72rem; color: #b07096; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .apc-exp-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.5); box-shadow: inset 0 0 0 1px rgba(155,96,130,0.12); overflow: hidden; }
+  .apc-exp-fill { height: 100%; width: 38%; border-radius: inherit; background: linear-gradient(90deg, #ffc2d8, #ff8ab2); animation: expGlow 2s ease-in-out infinite alternate; }
+  .apc-activities { padding: 0 28px 20px; }
+  .apc-act-label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: #c96d96; margin-bottom: 10px; }
+  .apc-act-list { display: grid; gap: 8px; }
+  .apc-act-item {
+    padding: 10px 14px; border-radius: 16px;
+    background: rgba(255,255,255,0.8);
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .apc-act-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef96b4; flex: 0 0 auto; }
+  .apc-act-dot.purple { background: #b48cc8; }
+  .apc-act-dot.green  { background: #6ac4a0; }
+  .apc-act-text { font-size: 0.84rem; color: #6b4e72; flex: 1; line-height: 1.4; }
+  .apc-act-time { font-size: 0.72rem; color: #a08aac; flex: 0 0 auto; }
+
+  /* ===== ANIMATIONS SHOWCASE ===== */
+  .anim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .anim-card {
+    border-radius: 22px; padding: 24px 20px; text-align: center;
+    background: rgba(255,255,255,0.72);
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.1);
+  }
+  .anim-title { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: #c96d96; margin-bottom: 16px; }
+  .demo-mascot {
+    width: 80px; height: 80px; margin: 0 auto 16px;
+    background: linear-gradient(135deg, #ffc2d8, #ef96b4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .demo-mascot svg { width: 48px; height: 48px; }
+  .demo-float { animation: companionFloat 4.8s ease-in-out infinite; }
+  .demo-glow-wrap {
+    width: 80px; height: 80px; margin: 0 auto 16px;
+    position: relative; display: flex; align-items: center; justify-content: center;
+  }
+  .demo-glow-halo {
+    position: absolute; inset: -16px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(255,138,178,0.45) 0%, transparent 70%);
+    animation: haloBreath 3.6s ease-in-out infinite;
+  }
+  .demo-glow-inner {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #ffc2d8, #ef96b4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .demo-glow-inner svg { width: 48px; height: 48px; }
+  .demo-sparkle-wrap {
+    width: 80px; height: 80px; margin: 0 auto 16px;
+    position: relative;
+  }
+  .demo-sparkle-base {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #ffc2d8, #ef96b4);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .demo-sparkle-base svg { width: 48px; height: 48px; }
+  .demo-sp {
+    position: absolute;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--color-accent);
+    animation: sparkleLoop 2s ease-in-out infinite;
+  }
+  .demo-sp:nth-child(2) { top: 0; left: 30%; animation-delay: 0.3s; background: #ffc2d8; width: 6px; height: 6px; }
+  .demo-sp:nth-child(3) { top: 10%; right: 5%; animation-delay: 0.7s; width: 10px; height: 10px; background: #ff8ab2; }
+  .demo-sp:nth-child(4) { top: 0; left: 10%; animation-delay: 1.1s; width: 6px; height: 6px; }
+  .anim-desc { font-size: 0.82rem; color: #8a7493; line-height: 1.5; }
+
+  /* ===== MOOD GLOW SHOWCASE ===== */
+  .mood-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .mood-card {
+    border-radius: 20px; padding: 20px 12px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .mood-idle    { background: rgba(255,250,253,0.9); box-shadow: 0 0 0 1px rgba(155,96,130,0.1), 0 8px 24px rgba(155,96,130,0.08); }
+  .mood-happy   { background: rgba(255,244,250,0.9); box-shadow: 0 0 0 1px rgba(239,150,180,0.2), 0 8px 24px rgba(239,150,180,0.18); }
+  .mood-thinking{ background: rgba(244,236,255,0.9); box-shadow: 0 0 0 1px rgba(160,120,200,0.2), 0 8px 24px rgba(160,120,200,0.16); }
+  .mood-sleepy  { background: rgba(240,244,255,0.9); box-shadow: 0 0 0 1px rgba(120,140,200,0.15), 0 8px 24px rgba(120,140,200,0.12); }
+  .mood-error   { background: rgba(255,236,240,0.9); box-shadow: 0 0 0 1px rgba(210,80,100,0.15), 0 8px 24px rgba(210,80,100,0.1); }
+  .mood-dot-idle     { width: 10px; height: 10px; border-radius: 50%; background: #ef96b4; }
+  .mood-dot-happy    { width: 10px; height: 10px; border-radius: 50%; background: #ff6fa5; box-shadow: 0 0 10px rgba(255,111,165,0.6); }
+  .mood-dot-thinking { width: 10px; height: 10px; border-radius: 50%; background: #b48cc8; box-shadow: 0 0 10px rgba(180,140,200,0.55); animation: dotPulse 1.2s ease-in-out infinite; }
+  .mood-dot-sleepy   { width: 10px; height: 10px; border-radius: 50%; background: #8090cc; }
+  .mood-dot-error    { width: 10px; height: 10px; border-radius: 50%; background: #e05070; box-shadow: 0 0 10px rgba(220,80,112,0.5); animation: dotPulse 0.8s ease-in-out infinite; }
+  .mood-name { font-size: 0.78rem; font-weight: 700; color: #5a4466; }
+  .mood-status { font-size: 0.72rem; color: #9a7aac; line-height: 1.3; }
+
+  /* Keyframes */
+  @keyframes companionFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes glowPulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.04); }
+  }
+  @keyframes haloBreath {
+    0%, 100% { opacity: 0.6; transform: scale(0.95); }
+    50% { opacity: 1; transform: scale(1.08); }
+  }
+  @keyframes blinkEyes {
+    0%, 94%, 100% { opacity: 0; transform: scaleY(1); }
+    95%, 98% { opacity: 1; transform: scaleY(0.15); }
+  }
+  @keyframes sparkleRise {
+    0% { opacity: 0; transform: translateY(0) scale(0.5); }
+    30% { opacity: 1; transform: translateY(-20px) translateX(var(--dx, 0)) scale(1.1); }
+    100% { opacity: 0; transform: translateY(-55px) translateX(var(--dx, 0)) scale(0.4); }
+  }
+  @keyframes sparkleLoop {
+    0%, 100% { opacity: 0; transform: translateY(0) scale(0.5); }
+    50% { opacity: 1; transform: translateY(-24px) scale(1); }
+  }
+  @keyframes expGlow {
+    0% { box-shadow: 0 0 6px rgba(255,138,178,0.3); }
+    100% { box-shadow: 0 0 14px rgba(255,138,178,0.7); }
+  }
+  @keyframes statusShimmer {
+    0%, 100% { box-shadow: 0 4px 12px rgba(239,121,170,0.18); }
+    50% { box-shadow: 0 4px 20px rgba(239,121,170,0.36); }
+  }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+  }
+
+  /* Nav */
+  .nav { display: flex; gap: 8px; margin-bottom: 40px; flex-wrap: wrap; }
+  .nav a {
+    padding: 8px 16px; border-radius: 999px; text-decoration: none;
+    font-size: 0.84rem; font-weight: 700;
+    background: rgba(255,255,255,0.75); color: #8a4f74;
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.15);
+    transition: background 0.15s;
+  }
+  .nav a:hover { background: rgba(255,235,245,0.95); }
+  .divider {
+    height: 1px; background: rgba(155,96,130,0.1); margin: 48px 0;
+  }
+
+  /* Summary box */
+  .summary-box {
+    border-radius: 24px; padding: 28px 32px;
+    background: linear-gradient(135deg, rgba(255,240,248,0.95), rgba(243,238,247,0.95));
+    box-shadow: inset 0 0 0 1px rgba(155,96,130,0.12), 0 12px 40px rgba(155,96,130,0.08);
+  }
+  .summary-box h3 { margin-bottom: 16px; font-size: 1.2rem; }
+  .summary-list { display: grid; gap: 12px; }
+  .summary-item { display: flex; gap: 14px; align-items: flex-start; }
+  .summary-num {
+    width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto;
+    background: linear-gradient(135deg, #ff9fc2, #f27aa9); color: white;
+    font-weight: 700; font-size: 0.82rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .summary-text { color: #5a4068; line-height: 1.6; font-size: 0.95rem; }
+  .summary-text strong { color: #3d2a4a; }
+</style>
+</head>
+<body>
+
+<h1>Sakurajima — Design Proposals</h1>
+<p class="subtitle">Three focused improvements to make the companion more alive and polished.</p>
+
+<nav class="nav">
+  <a href="#animations">1 · Animation Polish</a>
+  <a href="#panel">2 · Panel Redesign</a>
+  <a href="#moods">3 · Mood Glow System</a>
+  <a href="#summary">Summary</a>
+</nav>
+
+<!-- ===== SECTION 1: ANIMATIONS ===== -->
+<section class="section" id="animations">
+  <p class="section-label">Proposal 1</p>
+  <h2 class="section-title">Animation Polish</h2>
+  <p class="section-desc">The visual spec calls for breathing, blinking, ambient glow, and sparkle reactions — only the float animation is currently implemented. These three additions would make the companion feel truly alive.</p>
+
+  <div class="anim-grid">
+    <div class="anim-card">
+      <p class="anim-title">Ambient Glow Halo</p>
+      <div class="demo-glow-wrap">
+        <div class="demo-glow-halo"></div>
+        <div class="demo-glow-inner">
+          <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="18" fill="rgba(255,255,255,0.5)"/><circle cx="18" cy="22" r="3" fill="#fff"/><circle cx="30" cy="22" r="3" fill="#fff"/><path d="M18 32 Q24 37 30 32" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <p class="anim-desc">Soft radial glow pulsing behind the character. Changes color per mood. Already in the spec, not yet in code.</p>
+    </div>
+
+    <div class="anim-card">
+      <p class="anim-title">Pet Sparkle Burst</p>
+      <div class="demo-sparkle-wrap">
+        <div class="demo-sparkle-base">
+          <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="18" fill="rgba(255,255,255,0.5)"/><circle cx="18" cy="22" r="3" fill="#fff"/><circle cx="30" cy="22" r="3" fill="#fff"/><path d="M18 32 Q24 37 30 32" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="demo-sp"></div>
+        <div class="demo-sp"></div>
+        <div class="demo-sp"></div>
+        <div class="demo-sp"></div>
+      </div>
+      <p class="anim-desc">CSS particle burst on every pat — small petal-colored dots rise and fade. Makes the interaction feel tactile.</p>
+    </div>
+
+    <div class="anim-card">
+      <p class="anim-title">Character Blink</p>
+      <div style="margin: 0 auto 16px; position:relative; width:80px; height:80px;">
+        <div class="demo-mascot demo-float" style="position:relative;">
+          <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="18" fill="rgba(255,255,255,0.5)"/><circle cx="18" cy="22" r="3" fill="#fff"/><circle cx="30" cy="22" r="3" fill="#fff"/><path d="M18 32 Q24 37 30 32" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          <span style="position:absolute;top:36%;left:50%;transform:translateX(-50%);width:38px;height:5px;background:linear-gradient(90deg,transparent 2px,#ef96b4 2px,#ef96b4 12px,transparent 12px,transparent 26px,#ef96b4 26px,#ef96b4 36px,transparent 36px);border-radius:3px;animation:blinkEyes 5.5s ease-in-out infinite;opacity:0;"></span>
+        </div>
+      </div>
+      <p class="anim-desc">Occasional blink overlay (every ~5–7 s) using a CSS pseudo-element. Adds life without Live2D or image swapping.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== SECTION 2: COMPANION WINDOW BEFORE/AFTER ===== -->
+<section class="section" id="companion-card">
+  <p class="section-label">Proposal 1 (continued) — Companion Card</p>
+  <h2 class="section-title">Before vs After — Companion Window</h2>
+  <p class="section-desc">Glow, glassmorphism depth, animated EXP bar, and micro-hover effects on buttons. Same layout, significantly more alive.</p>
+
+  <div class="side-by-side" style="align-items:start;">
+    <div>
+      <div class="card-label"><span class="tag-before">Before</span> Current companion card</div>
+      <div class="before-companion">
+        <div class="before-status">Ready.</div>
+        <div class="before-stats">
+          <span>Lv 3</span><span>🌸 42</span><span>🔥 x1</span><span>📅 5d</span>
+        </div>
+        <div class="before-exp"><span></span></div>
+        <div class="before-art">
+          <svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="38" fill="rgba(239,150,180,0.4)"/><circle cx="38" cy="46" r="6" fill="#ef96b4"/><circle cx="62" cy="46" r="6" fill="#ef96b4"/><path d="M38 65 Q50 74 62 65" stroke="#ef96b4" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="before-actions">
+          <button class="before-action-btn">Check in</button>
+          <button class="before-action-btn">Pat</button>
+          <button class="before-action-btn">Mini Game</button>
+          <button class="before-action-btn">Surprise</button>
+        </div>
+        <div class="before-footer">
+          <div><p class="before-name">Sakurajima</p></div>
+          <button class="before-btn">Open panel</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card-label"><span class="tag-after">After</span> With glow + depth + hover effects</div>
+      <div style="position:relative;">
+        <div class="after-companion">
+          <div class="after-glow"></div>
+          <div class="after-status">Ready.</div>
+          <div class="after-stats">
+            <span>Lv 3</span><span>🌸 42</span><span>🔥 x1</span><span>📅 5d</span>
+          </div>
+          <div class="after-exp"><span></span></div>
+          <div class="after-art-wrap">
+            <div class="after-art-halo"></div>
+            <div class="after-art" style="animation: companionFloat 4.8s ease-in-out infinite;">
+              <svg viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="38" fill="rgba(239,150,180,0.4)"/><circle cx="38" cy="46" r="6" fill="#ef96b4"/><circle cx="62" cy="46" r="6" fill="#ef96b4"/><path d="M38 65 Q50 74 62 65" stroke="#ef96b4" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div class="after-actions">
+            <button class="after-action-btn">Check in</button>
+            <button class="after-action-btn">Pat</button>
+            <button class="after-action-btn">Mini Game</button>
+            <button class="after-action-btn">Surprise</button>
+          </div>
+          <div class="after-footer">
+            <div><p class="after-name">Sakurajima</p></div>
+            <button class="after-btn">Open panel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== SECTION 3: PANEL BEFORE/AFTER ===== -->
+<section class="section" id="panel">
+  <p class="section-label">Proposal 2</p>
+  <h2 class="section-title">Panel — Replace Dev Hero Card with Companion Status</h2>
+  <p class="section-desc">The "Feature 7 is now live" hero card is stale development content. Replace it with a living companion status card that shows current mood, stats, EXP, and recent activities — turning dead space into useful, beautiful information.</p>
+
+  <div class="side-by-side">
+    <div>
+      <div class="card-label"><span class="tag-before">Before</span> Static dev-era hero card</div>
+      <div class="before-panel">
+        <div class="phero">
+          <p class="pkicker">Feature 7</p>
+          <h2>Companion interaction core is now live in the desktop flow</h2>
+          <p>Sakurajima now pushes proactive care prompts, captures quick responses, and keeps the latest interaction feed connected to chat drafts.</p>
+          <div class="ppills">
+            <span class="ppill">Proactive Prompts</span>
+            <span class="ppill">Quick Actions</span>
+            <span class="ppill">Feed-to-Draft</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card-label"><span class="tag-after">After</span> Living companion status card</div>
+      <div class="after-panel">
+        <div class="apc-header">
+          <div class="apc-avatar">
+            <svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12" fill="rgba(255,255,255,0.5)"/><circle cx="12" cy="15" r="2.5" fill="#fff"/><circle cx="20" cy="15" r="2.5" fill="#fff"/><path d="M12 22 Q16 25 20 22" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          </div>
+          <div class="apc-meta">
+            <div class="apc-name">Sakurajima</div>
+            <div class="apc-mood"><div class="mood-dot"></div> Happy · Here with you.</div>
+          </div>
+        </div>
+
+        <div class="apc-stats-row">
+          <div class="apc-stat"><div class="apc-stat-val">3</div><div class="apc-stat-key">Level</div></div>
+          <div class="apc-stat"><div class="apc-stat-val">42</div><div class="apc-stat-key">Petals</div></div>
+          <div class="apc-stat"><div class="apc-stat-val">5</div><div class="apc-stat-key">Day Streak</div></div>
+          <div class="apc-stat"><div class="apc-stat-val">x8</div><div class="apc-stat-key">Best Combo</div></div>
+        </div>
+
+        <div class="apc-exp-row">
+          <div class="apc-exp-label"><span>EXP Progress</span><span>38 / 132</span></div>
+          <div class="apc-exp-bar"><div class="apc-exp-fill"></div></div>
+        </div>
+
+        <div class="apc-activities">
+          <div class="apc-act-label">Recent activity</div>
+          <div class="apc-act-list">
+            <div class="apc-act-item">
+              <div class="apc-act-dot"></div>
+              <div class="apc-act-text">Sent a gentle check-in prompt</div>
+              <div class="apc-act-time">2 min ago</div>
+            </div>
+            <div class="apc-act-item">
+              <div class="apc-act-dot purple"></div>
+              <div class="apc-act-text">You responded: "Feeling focused today"</div>
+              <div class="apc-act-time">5 min ago</div>
+            </div>
+            <div class="apc-act-item">
+              <div class="apc-act-dot green"></div>
+              <div class="apc-act-text">Daily bonus claimed · +24 petals</div>
+              <div class="apc-act-time">1 hr ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== SECTION 4: MOOD GLOW SYSTEM ===== -->
+<section class="section" id="moods">
+  <p class="section-label">Proposal 3</p>
+  <h2 class="section-title">Mood Glow System</h2>
+  <p class="section-desc">Each mood gets a distinct ambient card glow and dot color. Currently only `thinking`, `happy`, and `error` have status chip colors. This extends the system to all moods with subtle card-level glow differentiation.</p>
+
+  <div class="mood-grid">
+    <div class="mood-card mood-idle">
+      <div class="mood-dot-idle"></div>
+      <div class="mood-name">Idle</div>
+      <div class="mood-status">Ready.<br>Soft blush neutral</div>
+    </div>
+    <div class="mood-card mood-happy">
+      <div class="mood-dot-happy"></div>
+      <div class="mood-name">Happy</div>
+      <div class="mood-status">Here with you.<br>Warm rose glow</div>
+    </div>
+    <div class="mood-card mood-thinking">
+      <div class="mood-dot-thinking"></div>
+      <div class="mood-name">Thinking</div>
+      <div class="mood-status">Thinking...<br>Soft lavender pulse</div>
+    </div>
+    <div class="mood-card mood-sleepy">
+      <div class="mood-dot-sleepy"></div>
+      <div class="mood-name">Sleepy</div>
+      <div class="mood-status">Quiet mode.<br>Cool periwinkle</div>
+    </div>
+    <div class="mood-card mood-error">
+      <div class="mood-dot-error"></div>
+      <div class="mood-name">Error</div>
+      <div class="mood-status">Tap to regroup.<br>Warm red alert</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ===== SUMMARY ===== -->
+<section class="section" id="summary">
+  <p class="section-label">Summary</p>
+  <h2 class="section-title">What We'd Build</h2>
+  <p class="section-desc" style="margin-bottom:24px;">All three proposals are CSS/React-only — no new dependencies, no architecture changes. Pure polish.</p>
+
+  <div class="summary-box">
+    <h3>Implementation scope</h3>
+    <div class="summary-list">
+      <div class="summary-item">
+        <div class="summary-num">1</div>
+        <div class="summary-text"><strong>Animation polish</strong> — Add ambient glow halo (`@keyframes haloBreath`), CSS blink overlay (pseudo-element), EXP bar glow animation, and pet sparkle burst (absolutely-positioned particles triggered on click). ~40 lines of CSS + 1 small React state change for sparkles.</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num">2</div>
+        <div class="summary-text"><strong>Panel companion status card</strong> — Replace the static hero card in `PanelView.tsx` with a live `CompanionStatusCard` component that reads `funState`, `mood`, and `companionActivities` already available in the panel. No new IPC needed.</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-num">3</div>
+        <div class="summary-text"><strong>Mood glow system</strong> — Extend the existing `companion-card-{mood}` CSS class pattern to add card-level box-shadow and halo color per mood. ~25 lines of CSS. Covers all 6 moods consistently.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
