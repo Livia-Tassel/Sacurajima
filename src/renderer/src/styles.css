@@ -614,6 +614,332 @@ body {
   }
 }
 
+/* ── Feature 08: Animation Polish ─────────────────────────────────────────── */
+
+/* Art zone wrapper — needed for halo and blink pseudo-element */
+.companion-art-zone {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Glow halo behind the illustration */
+.companion-art-halo {
+  position: absolute;
+  inset: -24px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 180, 210, 0.30) 0%, transparent 70%);
+  animation: haloBreath 3.6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Lift illustration above halo */
+.companion-art-zone .companion-illustration {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes haloBreath {
+  0%, 100% { opacity: 0.5; transform: scale(0.94); }
+  50%       { opacity: 1;   transform: scale(1.08); }
+}
+
+/* Mood-specific halo tints */
+.companion-card-happy .companion-art-halo {
+  background: radial-gradient(ellipse, rgba(255, 111, 165, 0.38) 0%, transparent 70%);
+}
+.companion-card-thinking .companion-art-halo {
+  background: radial-gradient(ellipse, rgba(180, 140, 200, 0.32) 0%, transparent 70%);
+}
+.companion-card-sleepy .companion-art-halo {
+  background: radial-gradient(ellipse, rgba(128, 144, 204, 0.25) 0%, transparent 70%);
+}
+.companion-card-error .companion-art-halo {
+  background: radial-gradient(ellipse, rgba(220, 80, 112, 0.28) 0%, transparent 70%);
+}
+
+/* Blink overlay via ::after on the art zone div */
+.companion-art-zone::after {
+  content: '';
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52px;
+  height: 6px;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 0px,  transparent 2px,
+      #ef96b4    2px,  #ef96b4    15px,
+      transparent 15px, transparent 37px,
+      #ef96b4    37px, #ef96b4    50px,
+      transparent 50px
+    );
+  border-radius: 3px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  animation: blinkEyes 5.5s ease-in-out infinite;
+}
+
+@keyframes blinkEyes {
+  0%, 93%, 100% { opacity: 0; transform: translateX(-50%) scaleY(1); }
+  94%, 97%      { opacity: 1; transform: translateX(-50%) scaleY(0.15); }
+}
+
+/* Pet sparkles */
+.companion-sparkle {
+  position: absolute;
+  bottom: 55%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  pointer-events: none;
+  animation: sparkleRise 1.4s ease-out forwards;
+  z-index: 3;
+}
+
+.companion-sparkle:nth-child(3n + 1) { background: var(--color-blush); width: 6px;  height: 6px; }
+.companion-sparkle:nth-child(3n + 2) { background: var(--color-rose);  width: 10px; height: 10px; }
+
+@keyframes sparkleRise {
+  0%   { opacity: 0; transform: translateY(0) scale(0.5); }
+  25%  { opacity: 1; transform: translateY(-18px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-58px) scale(0.3); }
+}
+
+/* ── Fun-state stat bar ─────────────────────────────────────────────────────── */
+
+.companion-fun-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.companion-fun-stats span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: #835b85;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.13);
+}
+
+.companion-exp-track {
+  width: min(220px, 92%);
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+}
+
+.companion-exp-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffc2d8, #ff8ab2);
+  animation: expGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes expGlow {
+  from { box-shadow: 0 0 4px rgba(255, 138, 178, 0.25); }
+  to   { box-shadow: 0 0 14px rgba(255, 138, 178, 0.65); }
+}
+
+/* ── Mood Glow System ──────────────────────────────────────────────────────── */
+
+.companion-card-idle     { box-shadow: 0 8px 32px rgba(155,  96, 130, 0.10); }
+.companion-card-happy    { box-shadow: 0 8px 32px rgba(239, 121, 170, 0.22); }
+.companion-card-thinking { box-shadow: 0 8px 32px rgba(160, 120, 200, 0.20); }
+.companion-card-sleepy   { box-shadow: 0 8px 32px rgba(120, 140, 200, 0.14); }
+.companion-card-error    { box-shadow: 0 8px 32px rgba(210,  80, 100, 0.18); }
+
+.companion-card-idle .companion-status-chip {
+  background: rgba(255, 250, 252, 0.72);
+  color: #b1658d;
+}
+
+.companion-card-sleepy .companion-status-chip {
+  background: rgba(235, 238, 255, 0.82);
+  color: #6a79b8;
+}
+
+/* ── Button Hover Lift ─────────────────────────────────────────────────────── */
+
+.companion-trigger {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.companion-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 24px rgba(242, 122, 169, 0.40);
+}
+
+/* ── CompanionStatusCard ───────────────────────────────────────────────────── */
+
+.csc-root {
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.10), 0 8px 32px rgba(155, 96, 130, 0.08);
+  overflow: hidden;
+}
+
+.csc-header {
+  padding: 20px 24px 14px;
+  background: linear-gradient(180deg, rgba(255, 235, 245, 0.85), transparent);
+  border-bottom: 1px solid rgba(155, 96, 130, 0.07);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.csc-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffc2d8, #ef96b4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(239, 150, 180, 0.35);
+  flex: 0 0 auto;
+  animation: companionFloat 4.8s ease-in-out infinite;
+}
+
+.csc-meta { flex: 1; }
+
+.csc-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #4b3850;
+}
+
+.csc-mood-chip {
+  margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 230, 242, 0.9);
+  color: #c0527a;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.csc-mood-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef96b4;
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.5); opacity: 0.6; }
+}
+
+.csc-stats {
+  padding: 14px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.csc-stat {
+  text-align: center;
+  padding: 12px 6px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.08);
+}
+
+.csc-stat-val {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #6b3e62;
+}
+
+.csc-stat-key {
+  margin-top: 3px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b07096;
+}
+
+.csc-exp {
+  padding: 0 24px 14px;
+}
+
+.csc-exp-label {
+  font-size: 0.72rem;
+  color: #b07096;
+  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.csc-exp-bar {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(155, 96, 130, 0.12);
+  overflow: hidden;
+}
+
+.csc-exp-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ffc2d8, #ff8ab2);
+  animation: expGlow 2s ease-in-out infinite alternate;
+}
+
+.csc-tip {
+  padding: 0 24px 18px;
+}
+
+.csc-tip-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c96d96;
+  margin-bottom: 8px;
+}
+
+.csc-tip-text {
+  font-size: 0.86rem;
+  color: #7a667d;
+  line-height: 1.55;
+}
+
+/* ── Art button reset ──────────────────────────────────────────────────────── */
+
+.companion-art-button {
+  display: block;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+  width: 100%;
+}
+
 @media (max-width: 920px) {
   .panel-shell {
     grid-template-columns: 1fr;
