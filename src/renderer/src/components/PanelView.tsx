@@ -29,6 +29,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   const [chatInput, setChatInput] = useState('');
   const [chatBusy, setChatBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState<StatusState>(null);
+  const [companionActivities, setCompanionActivities] = useState<CompanionActivity[]>([]);
   const [didHydrateInitialView, setDidHydrateInitialView] = useState(false);
   const [companionMood, setCompanionMood] = useState<CompanionMood>('idle');
 
@@ -74,6 +75,26 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       setChatStatus({
         tone: 'error',
         text: error instanceof Error ? error.message : 'Failed to load chat history.'
+      });
+    }
+  });
+
+  const refreshCompanionActivities = useEffectEvent(async () => {
+    try {
+      const result = await window.sakurajima.companion.listActivities();
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        return;
+      }
+
+      setCompanionActivities(result.data);
+    } catch (error) {
+      setChatStatus({
+        tone: 'error',
+        text: error instanceof Error ? error.message : 'Failed to load companion activities.'
       });
     }
   });
@@ -160,7 +181,30 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
 
   useEffect(() => {
     void refreshHistory();
-  }, [refreshHistory]);
+    void refreshCompanionActivities();
+  }, [refreshCompanionActivities, refreshHistory]);
+
+  const handleCompanionEvent = useEffectEvent((event: CompanionEvent) => {
+    if (event.type === 'companion-state') {
+      return;
+    }
+
+    if (event.type === 'companion-action-result') {
+      setChatStatus({
+        tone: 'info',
+        text: `Companion captured "${event.action.label}".`
+      });
+    }
+    void refreshCompanionActivities();
+  });
+
+  useEffect(() => {
+    const unsubscribe = window.sakurajima.events.onCompanionEvent((event) => {
+      handleCompanionEvent(event);
+    });
+
+    return unsubscribe;
+  }, [handleCompanionEvent]);
 
   useEffect(() => {
     const unsubscribe = window.sakurajima.events.onChatEvent((event) => {
@@ -182,6 +226,22 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   }, [config, didHydrateInitialView, loadError, loading]);
 
   const canChat = hasEssentialConfig(config);
+
+  const injectCompanionDraft = (seedMessage: string) => {
+    const normalized = seedMessage.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setTab('chat');
+    setChatInput((current) =>
+      (current ? `${current}\n${normalized}` : normalized).slice(0, MAX_CHAT_MESSAGE_CHARS)
+    );
+    setChatStatus({
+      tone: 'info',
+      text: 'Draft injected from companion activity.'
+    });
+  };
 
   const startNewChat = () => {
     setActiveSessionId(null);
@@ -270,8 +330,8 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
             </div>
             <h1>Sakurajima</h1>
             <p className="panel-copy">
-              Configure New API or any OpenAI-compatible endpoint here. Chat and
-              local history will attach to this same shell in the next feature.
+              Configure your endpoint, chat in local sessions, and review companion
+              check-ins from the same desktop shell.
             </p>
           </div>
           <div className="panel-session-list">

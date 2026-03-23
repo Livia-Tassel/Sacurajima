@@ -8,6 +8,11 @@ import {
   type ConnectionTestResult,
   type IpcError
 } from '../../../shared/config';
+import {
+  DEFAULT_COMPANION_PREFS,
+  sanitizeCompanionPrefs,
+  type CompanionPrefs
+} from '../../../shared/companion';
 import { BrandMark } from './BrandMark';
 
 type SettingsFormProps = {
@@ -47,6 +52,8 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
   const [message, setMessage] = useState<MessageState>(null);
   const [connectionResult, setConnectionResult] = useState<ConnectionTestResult | null>(null);
   const [busyAction, setBusyAction] = useState<'save' | 'test' | null>(null);
+  const [companionPrefs, setCompanionPrefs] = useState<CompanionPrefs>(DEFAULT_COMPANION_PREFS);
+  const [companionBusy, setCompanionBusy] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
@@ -56,6 +63,41 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
     setDraft(toDraft(config));
   }, [config, isDirty]);
 
+  useEffect(() => {
+    let canceled = false;
+    const loadCompanionPrefs = async () => {
+      try {
+        const result = await window.sakurajima.companion.getPrefs();
+        if (!result.ok) {
+          if (!canceled) {
+            setMessage({
+              tone: 'error',
+              text: describeError(result.error)
+            });
+          }
+          return;
+        }
+
+        if (!canceled) {
+          setCompanionPrefs(result.data);
+        }
+      } catch (error) {
+        if (!canceled) {
+          setMessage({
+            tone: 'error',
+            text: error instanceof Error ? error.message : 'Failed to load companion preferences.'
+          });
+        }
+      }
+    };
+
+    void loadCompanionPrefs();
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
+
   const normalizedPreview = normalizeBaseUrl(draft);
 
   const updateDraft = <K extends keyof SettingsDraft>(key: K, value: SettingsDraft[K]) => {
@@ -64,6 +106,19 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
       ...current,
       [key]: value
     }));
+  };
+
+  const updateCompanionPrefs = (next: Partial<CompanionPrefs>) => {
+    setCompanionPrefs((current) =>
+      sanitizeCompanionPrefs({
+        ...current,
+        ...next,
+        quietHours: {
+          ...current.quietHours,
+          ...next.quietHours
+        }
+      })
+    );
   };
 
   const handleSave = async () => {
@@ -123,6 +178,34 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
       });
     } finally {
       setBusyAction(null);
+    }
+  };
+
+  const handleSaveCompanionPrefs = async () => {
+    setCompanionBusy(true);
+    setMessage(null);
+    try {
+      const result = await window.sakurajima.companion.savePrefs(companionPrefs);
+      if (!result.ok) {
+        setMessage({
+          tone: 'error',
+          text: describeError(result.error)
+        });
+        return;
+      }
+
+      setCompanionPrefs(result.data);
+      setMessage({
+        tone: 'success',
+        text: 'Companion preferences saved.'
+      });
+    } catch (error) {
+      setMessage({
+        tone: 'error',
+        text: error instanceof Error ? error.message : 'Failed to save companion preferences.'
+      });
+    } finally {
+      setCompanionBusy(false);
     }
   };
 
@@ -264,6 +347,117 @@ export function SettingsForm({ config, loading, loadError, onSaved }: SettingsFo
             type="button"
           >
             {busyAction === 'save' ? 'Saving...' : 'Save Settings'}
+          </button>
+        </div>
+      </section>
+
+      <section className="settings-section">
+        <div className="settings-header">
+          <div>
+            <p className="panel-kicker">Companion</p>
+            <h2 className="settings-title">Tune proactive companion behavior</h2>
+          </div>
+          <span className="settings-badge">
+            {companionPrefs.proactiveEnabled ? 'Proactive enabled' : 'Proactive paused'}
+          </span>
+        </div>
+
+        <div className="field-grid">
+          <label className="field field-full">
+            <span>Proactive companion</span>
+            <div className="provider-toggle">
+              <button
+                className={companionPrefs.proactiveEnabled ? 'provider-button active' : 'provider-button'}
+                disabled={companionBusy}
+                onClick={() => updateCompanionPrefs({ proactiveEnabled: true })}
+                type="button"
+              >
+                Enabled
+              </button>
+              <button
+                className={!companionPrefs.proactiveEnabled ? 'provider-button active' : 'provider-button'}
+                disabled={companionBusy}
+                onClick={() => updateCompanionPrefs({ proactiveEnabled: false })}
+                type="button"
+              >
+                Disabled
+              </button>
+            </div>
+          </label>
+
+          <label className="field field-full">
+            <span>Proactive intensity</span>
+            <div className="provider-toggle">
+              <button
+                className={companionPrefs.proactiveLevel === 'low' ? 'provider-button active' : 'provider-button'}
+                disabled={companionBusy}
+                onClick={() => updateCompanionPrefs({ proactiveLevel: 'low' })}
+                type="button"
+              >
+                Low
+              </button>
+              <button
+                className={companionPrefs.proactiveLevel === 'balanced' ? 'provider-button active' : 'provider-button'}
+                disabled={companionBusy}
+                onClick={() => updateCompanionPrefs({ proactiveLevel: 'balanced' })}
+                type="button"
+              >
+                Balanced
+              </button>
+              <button
+                className={companionPrefs.proactiveLevel === 'active' ? 'provider-button active' : 'provider-button'}
+                disabled={companionBusy}
+                onClick={() => updateCompanionPrefs({ proactiveLevel: 'active' })}
+                type="button"
+              >
+                Active
+              </button>
+            </div>
+          </label>
+
+          <label className="field">
+            <span>Quiet start</span>
+            <input
+              disabled={companionBusy}
+              onChange={(event) =>
+                updateCompanionPrefs({
+                  quietHours: {
+                    ...companionPrefs.quietHours,
+                    start: event.target.value
+                  }
+                })
+              }
+              type="time"
+              value={companionPrefs.quietHours.start}
+            />
+          </label>
+
+          <label className="field">
+            <span>Quiet end</span>
+            <input
+              disabled={companionBusy}
+              onChange={(event) =>
+                updateCompanionPrefs({
+                  quietHours: {
+                    ...companionPrefs.quietHours,
+                    end: event.target.value
+                  }
+                })
+              }
+              type="time"
+              value={companionPrefs.quietHours.end}
+            />
+          </label>
+        </div>
+
+        <div className="settings-actions">
+          <button
+            className="settings-button"
+            disabled={companionBusy}
+            onClick={() => void handleSaveCompanionPrefs()}
+            type="button"
+          >
+            {companionBusy ? 'Saving...' : 'Save Companion Preferences'}
           </button>
         </div>
       </section>

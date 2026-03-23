@@ -40,6 +40,8 @@ export default function App() {
   });
 
   useEffect(() => {
+    document.body.dataset.view = view;
+
     void window.sakurajima.app
       .getVersion()
       .then((result: AppVersionResponse) => {
@@ -49,7 +51,7 @@ export default function App() {
         setVersion('unknown');
       });
     void loadSettings();
-  }, [loadSettings]);
+  }, [loadSettings, view]);
 
   if (view === 'companion') {
     return (
