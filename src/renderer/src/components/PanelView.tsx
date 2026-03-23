@@ -1,15 +1,10 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { hasEssentialConfig, type AppConfigView } from '../../../shared/config';
-import {
-  MAX_CHAT_MESSAGE_CHARS,
-  toSessionSummary,
-  type ChatEvent,
-  type ChatMessage,
-  type SessionSummary
-} from '../../../shared/chat';
-import type { CompanionActivity, CompanionEvent } from '../../../shared/companion';
+import { toSessionSummary, type ChatEvent, type ChatMessage, type SessionSummary } from '../../../shared/chat';
+import type { CompanionMood } from '../../../shared/companion';
 import { BrandMark } from './BrandMark';
 import { ChatWorkspace } from './ChatWorkspace';
+import { CompanionStatusCard } from './CompanionStatusCard';
 import { MascotArtwork } from './MascotArtwork';
 import { SettingsForm } from './SettingsForm';
 
@@ -36,6 +31,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   const [chatStatus, setChatStatus] = useState<StatusState>(null);
   const [companionActivities, setCompanionActivities] = useState<CompanionActivity[]>([]);
   const [didHydrateInitialView, setDidHydrateInitialView] = useState(false);
+  const [companionMood, setCompanionMood] = useState<CompanionMood>('idle');
 
   const loadSession = useEffectEvent(async (sessionId: string) => {
     try {
@@ -114,6 +110,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       setChatBusy(true);
       setChatStatus(null);
       setTab('chat');
+      setCompanionMood('thinking');
       return;
     }
 
@@ -146,6 +143,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       }
       setChatBusy(false);
       setChatStatus(null);
+      setCompanionMood('happy');
       return;
     }
 
@@ -162,6 +160,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
         tone: 'info',
         text: 'Generation stopped.'
       });
+      setCompanionMood('idle');
       return;
     }
 
@@ -177,6 +176,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       tone: 'error',
       text: event.error.message
     });
+    setCompanionMood('error');
   });
 
   useEffect(() => {
@@ -375,65 +375,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
         </aside>
 
         <section className="panel-content">
-          <section className="companion-feed-card">
-            <div className="companion-feed-head">
-              <p className="panel-kicker">Companion feed</p>
-              <button
-                className="settings-button secondary companion-feed-refresh"
-                onClick={() => void refreshCompanionActivities()}
-                type="button"
-              >
-                Refresh
-              </button>
-            </div>
-            {companionActivities.length === 0 ? (
-              <p className="panel-value">No companion updates yet. Sakurajima will check in shortly.</p>
-            ) : (
-              <div className="companion-feed-list">
-                {companionActivities.slice(0, 5).map((activity) => (
-                  <article className="companion-feed-item" key={activity.id}>
-                    <div>
-                      <p className="panel-label">{activity.type.toUpperCase()}</p>
-                      <p className="panel-value">{activity.text}</p>
-                      <p className="companion-feed-time">
-                        {new Date(activity.createdAt).toLocaleTimeString([], {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                    </div>
-                    {activity.seedMessage ? (
-                      <button
-                        className="settings-button secondary companion-feed-action"
-                        onClick={() => {
-                          if (activity.seedMessage) {
-                            injectCompanionDraft(activity.seedMessage);
-                          }
-                        }}
-                        type="button"
-                      >
-                        Use as draft
-                      </button>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <div className="panel-hero-card">
-            <p className="panel-kicker">Feature 7</p>
-            <h2>Companion interaction core is now live in the desktop flow</h2>
-            <p>
-              Sakurajima now pushes proactive care prompts, captures quick
-              responses, and keeps the latest interaction feed connected to chat drafts.
-            </p>
-            <div className="panel-pill-row">
-              <span className="panel-pill">Proactive Prompts</span>
-              <span className="panel-pill">Quick Actions</span>
-              <span className="panel-pill">Feed-to-Draft</span>
-            </div>
-          </div>
+          <CompanionStatusCard mood={companionMood} />
 
           {tab === 'settings' ? (
             <SettingsForm
