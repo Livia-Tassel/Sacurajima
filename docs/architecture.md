@@ -5,6 +5,7 @@
 - Main Process：窗口、托盘、持久化、配置加密、网络请求编排、IPC 管理
 - Preload：为渲染层暴露白名单 API，不提供任意 Node 访问
 - Renderer：React UI，负责桌宠界面、聊天面板、设置页、状态展示
+- CompanionEngine（Main 内服务）：负责主动关怀策略、状态机、定时调度和限频
 
 ## 核心窗口
 
@@ -29,6 +30,8 @@
 2. Main 负责校验入参、读取配置、请求网络、持久化状态
 3. Renderer 只消费结构化返回值，不直接访问文件系统或网络配置
 4. 聊天增量内容通过主进程事件广播回到 renderer，由 renderer 负责增量渲染
+5. CompanionEngine 将 `chat` 事件与定时触发统一映射为 `companion` 事件广播
+6. Panel 通过 `companion.listActivities()` 拉取历史动态，并可一键注入聊天草稿
 
 ## 存储策略
 
@@ -37,6 +40,7 @@
 - 会话历史：本地 JSON store，按 session 组织
 - 窗口状态：独立持久化，包含位置、尺寸、可见性
 - 进行中的聊天请求：仅保存在主进程内存，用 `AbortController` 管理
+- 陪伴偏好与轻量互动记忆：独立本地 JSON store（不含额外敏感数据）
 
 ## 状态恢复
 

@@ -99,3 +99,60 @@
   - `chat-complete`
   - `chat-error`
   - `chat-abort`
+
+## `companion.getPrefs()`
+
+- 作用：读取陪伴偏好配置
+- 返回：
+  - `ok: true`
+  - `data: CompanionPrefs`
+  - 或 `ok: false`, `error: IpcError`
+
+## `companion.savePrefs(prefs)`
+
+- 作用：保存陪伴偏好配置
+- 入参：`CompanionPrefs`
+- 返回：
+  - `ok: true`
+  - `data: CompanionPrefs`
+  - 或 `ok: false`, `error: IpcError`
+
+## `companion.listActivities()`
+
+- 作用：读取近期陪伴动态（用于 panel 顶部展示）
+- 返回：
+  - `ok: true`
+  - `data: CompanionActivity[]`
+  - 或 `ok: false`, `error: IpcError`
+
+## `companion.respond({ promptId, actionId })`
+
+- 作用：提交桌宠提示卡片的快捷回应
+- 返回：
+  - `ok: true`
+  - `data: { promptId: string; actionId: string }`
+  - 或 `ok: false`, `error: IpcError`
+
+## `companion.dismiss(promptId)`
+
+- 作用：手动关闭当前桌宠提示卡片
+- 返回：
+  - `ok: true`
+  - `data: { promptId: string }`
+  - 或 `ok: false`, `error: IpcError`
+
+## `companion.nudge()`
+
+- 作用：用户主动触发一次“关怀提示”
+- 返回：
+  - `ok: true`
+  - `data: { triggered: boolean }`
+  - 或 `ok: false`, `error: IpcError`
+
+## `events.onCompanionEvent(callback)`
+
+- 事件类型：
+  - `companion-state`
+  - `companion-prompt`
+  - `companion-dismiss`
+  - `companion-action-result`

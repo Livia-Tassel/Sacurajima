@@ -100,7 +100,83 @@ type ChatEvent =
 ## CompanionMood
 
 ```ts
-type CompanionMood = 'idle' | 'thinking' | 'replying' | 'sleeping' | 'error';
+type CompanionMood =
+  | 'idle'
+  | 'checkin'
+  | 'listening'
+  | 'thinking'
+  | 'happy'
+  | 'sleepy'
+  | 'error';
+```
+
+## CompanionPromptAction
+
+```ts
+type CompanionPromptAction = {
+  id: string;
+  label: string;
+  seedMessage: string;
+  resultingMood?: CompanionMood;
+};
+```
+
+## CompanionPrompt
+
+```ts
+type CompanionPrompt = {
+  id: string;
+  templateId: string;
+  text: string;
+  actions: CompanionPromptAction[];
+  createdAt: string;
+  expiresAt: string;
+};
+```
+
+## CompanionEvent
+
+```ts
+type CompanionEvent =
+  | { type: 'companion-state'; mood: CompanionMood; reason: string }
+  | { type: 'companion-prompt'; prompt: CompanionPrompt }
+  | { type: 'companion-dismiss'; promptId: string; reason: 'timeout' | 'manual' | 'acted' }
+  | {
+      type: 'companion-action-result';
+      promptId: string;
+      action: CompanionPromptAction;
+      seedMessage: string;
+      mood: CompanionMood;
+    };
+```
+
+## CompanionPrefs
+
+```ts
+type CompanionProactiveLevel = 'low' | 'balanced' | 'active';
+
+type CompanionPrefs = {
+  proactiveEnabled: boolean;
+  proactiveLevel: CompanionProactiveLevel;
+  quietHours: {
+    start: string;
+    end: string;
+  };
+};
+```
+
+## CompanionActivity
+
+```ts
+type CompanionActivity = {
+  id: string;
+  type: 'prompt' | 'response' | 'dismiss';
+  text: string;
+  createdAt: string;
+  promptId?: string;
+  actionId?: string;
+  seedMessage?: string;
+};
 ```
 
 ## WindowState

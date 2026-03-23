@@ -1,6 +1,13 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { hasEssentialConfig, type AppConfigView } from '../../../shared/config';
-import { toSessionSummary, type ChatEvent, type ChatMessage, type SessionSummary } from '../../../shared/chat';
+import {
+  MAX_CHAT_MESSAGE_CHARS,
+  toSessionSummary,
+  type ChatEvent,
+  type ChatMessage,
+  type SessionSummary
+} from '../../../shared/chat';
+import type { CompanionActivity, CompanionEvent } from '../../../shared/companion';
 import { BrandMark } from './BrandMark';
 import { ChatWorkspace } from './ChatWorkspace';
 import { MascotArtwork } from './MascotArtwork';
@@ -27,6 +34,7 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   const [chatInput, setChatInput] = useState('');
   const [chatBusy, setChatBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState<StatusState>(null);
+  const [companionActivities, setCompanionActivities] = useState<CompanionActivity[]>([]);
   const [didHydrateInitialView, setDidHydrateInitialView] = useState(false);
 
   const loadSession = useEffectEvent(async (sessionId: string) => {
@@ -71,6 +79,26 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
       setChatStatus({
         tone: 'error',
         text: error instanceof Error ? error.message : 'Failed to load chat history.'
+      });
+    }
+  });
+
+  const refreshCompanionActivities = useEffectEvent(async () => {
+    try {
+      const result = await window.sakurajima.companion.listActivities();
+      if (!result.ok) {
+        setChatStatus({
+          tone: 'error',
+          text: result.error.message
+        });
+        return;
+      }
+
+      setCompanionActivities(result.data);
+    } catch (error) {
+      setChatStatus({
+        tone: 'error',
+        text: error instanceof Error ? error.message : 'Failed to load companion activities.'
       });
     }
   });
@@ -153,7 +181,30 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
 
   useEffect(() => {
     void refreshHistory();
-  }, [refreshHistory]);
+    void refreshCompanionActivities();
+  }, [refreshCompanionActivities, refreshHistory]);
+
+  const handleCompanionEvent = useEffectEvent((event: CompanionEvent) => {
+    if (event.type === 'companion-state') {
+      return;
+    }
+
+    if (event.type === 'companion-action-result') {
+      setChatStatus({
+        tone: 'info',
+        text: `Companion captured "${event.action.label}".`
+      });
+    }
+    void refreshCompanionActivities();
+  });
+
+  useEffect(() => {
+    const unsubscribe = window.sakurajima.events.onCompanionEvent((event) => {
+      handleCompanionEvent(event);
+    });
+
+    return unsubscribe;
+  }, [handleCompanionEvent]);
 
   useEffect(() => {
     const unsubscribe = window.sakurajima.events.onChatEvent((event) => {
@@ -175,6 +226,22 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
   }, [config, didHydrateInitialView, loadError, loading]);
 
   const canChat = hasEssentialConfig(config);
+
+  const injectCompanionDraft = (seedMessage: string) => {
+    const normalized = seedMessage.trim();
+    if (!normalized) {
+      return;
+    }
+
+    setTab('chat');
+    setChatInput((current) =>
+      (current ? `${current}\n${normalized}` : normalized).slice(0, MAX_CHAT_MESSAGE_CHARS)
+    );
+    setChatStatus({
+      tone: 'info',
+      text: 'Draft injected from companion activity.'
+    });
+  };
 
   const startNewChat = () => {
     setActiveSessionId(null);
@@ -263,8 +330,8 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
             </div>
             <h1>Sakurajima</h1>
             <p className="panel-copy">
-              Configure New API or any OpenAI-compatible endpoint here. Chat and
-              local history will attach to this same shell in the next feature.
+              Configure your endpoint, chat in local sessions, and review companion
+              check-ins from the same desktop shell.
             </p>
           </div>
           <div className="panel-session-list">
@@ -308,18 +375,63 @@ export function PanelView({ config, loadError, loading, onSaved, version }: Pane
         </aside>
 
         <section className="panel-content">
+          <section className="companion-feed-card">
+            <div className="companion-feed-head">
+              <p className="panel-kicker">Companion feed</p>
+              <button
+                className="settings-button secondary companion-feed-refresh"
+                onClick={() => void refreshCompanionActivities()}
+                type="button"
+              >
+                Refresh
+              </button>
+            </div>
+            {companionActivities.length === 0 ? (
+              <p className="panel-value">No companion updates yet. Sakurajima will check in shortly.</p>
+            ) : (
+              <div className="companion-feed-list">
+                {companionActivities.slice(0, 5).map((activity) => (
+                  <article className="companion-feed-item" key={activity.id}>
+                    <div>
+                      <p className="panel-label">{activity.type.toUpperCase()}</p>
+                      <p className="panel-value">{activity.text}</p>
+                      <p className="companion-feed-time">
+                        {new Date(activity.createdAt).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    {activity.seedMessage ? (
+                      <button
+                        className="settings-button secondary companion-feed-action"
+                        onClick={() => {
+                          if (activity.seedMessage) {
+                            injectCompanionDraft(activity.seedMessage);
+                          }
+                        }}
+                        type="button"
+                      >
+                        Use as draft
+                      </button>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
           <div className="panel-hero-card">
-            <p className="panel-kicker">Feature 4</p>
-            <h2>Local sessions and streaming chat now live in the panel</h2>
+            <p className="panel-kicker">Feature 7</p>
+            <h2>Companion interaction core is now live in the desktop flow</h2>
             <p>
-              The panel now keeps session history locally, streams assistant
-              deltas in place, and falls back to standard JSON completions when
-              the endpoint does not answer with SSE.
+              Sakurajima now pushes proactive care prompts, captures quick
+              responses, and keeps the latest interaction feed connected to chat drafts.
             </p>
             <div className="panel-pill-row">
-              <span className="panel-pill">Streaming</span>
-              <span className="panel-pill">Abort</span>
-              <span className="panel-pill">Local History</span>
+              <span className="panel-pill">Proactive Prompts</span>
+              <span className="panel-pill">Quick Actions</span>
+              <span className="panel-pill">Feed-to-Draft</span>
             </div>
           </div>
 

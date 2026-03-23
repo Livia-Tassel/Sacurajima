@@ -2,17 +2,22 @@ import { app, BrowserWindow, ipcMain, screen, Tray } from 'electron';
 import { join } from 'node:path';
 import { ChatService } from './chat-service';
 import { ChatSessionStore } from './chat-session-store';
+import { CompanionEngine } from './companion-engine';
+import { CompanionStateStore } from './companion-state-store';
 import { ConfigStore } from './config-store';
 import { createAppTray } from './tray';
 import { runtimeState } from './runtime-state';
 import { WindowStateStore } from './window-state-store';
 import { createCompanionWindow, createPanelWindow } from './windows';
+import { sanitizeCompanionPrefs, type CompanionEvent, type CompanionRespondInput } from '../shared/companion';
 
 let companionWindow: BrowserWindow | null = null;
 let panelWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
 let chatSessionStore: ChatSessionStore | null = null;
 let windowStateStore: WindowStateStore | null = null;
+let companionStateStore: CompanionStateStore | null = null;
+let companionEngine: CompanionEngine | null = null;
 const PANEL_GAP = 28;
 
 app.setName('Sakurajima');
@@ -157,6 +162,25 @@ function toggleCompanion() {
   }
 }
 
+function broadcastCompanionEvent(event: CompanionEvent) {
+  for (const window of [companionWindow, panelWindow]) {
+    if (window && !window.isDestroyed()) {
+      window.webContents.send('companion:event', event);
+    }
+  }
+}
+
+function companionUnavailable() {
+  return {
+    ok: false as const,
+    error: {
+      code: 'UNKNOWN_ERROR' as const,
+      message: 'Companion engine is not ready.',
+      retriable: true
+    }
+  };
+}
+
 if (singleInstance) {
   app.on('second-instance', () => {
     if (companionWindow && !companionWindow.isVisible()) {
@@ -169,8 +193,13 @@ if (singleInstance) {
   app.whenReady().then(() => {
     const configStore = new ConfigStore();
     chatSessionStore = new ChatSessionStore();
+    companionStateStore = new CompanionStateStore();
+    companionEngine = new CompanionEngine(companionStateStore, broadcastCompanionEvent);
     const chatService = new ChatService(configStore, chatSessionStore, () =>
-      [companionWindow, panelWindow].filter((window): window is BrowserWindow => Boolean(window))
+      [companionWindow, panelWindow].filter((window): window is BrowserWindow => Boolean(window)),
+      (event) => {
+        companionEngine?.handleChatEvent(event);
+      }
     );
     windowStateStore = new WindowStateStore();
 
@@ -185,6 +214,76 @@ if (singleInstance) {
     ipcMain.handle('settings:load', () => configStore.load());
     ipcMain.handle('settings:save', (_event, config) => configStore.save(config));
     ipcMain.handle('settings:test-connection', (_event, config) => configStore.testConnection(config));
+    ipcMain.handle('companion:get-prefs', () => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      return {
+        ok: true as const,
+        data: companionEngine.getPrefs()
+      };
+    });
+    ipcMain.handle('companion:save-prefs', (_event, input) => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      return companionEngine.savePrefs(sanitizeCompanionPrefs(input));
+    });
+    ipcMain.handle('companion:list-activities', () => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      return {
+        ok: true as const,
+        data: companionEngine.listActivities()
+      };
+    });
+    ipcMain.handle('companion:respond', (_event, input: CompanionRespondInput) => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      if (!input || typeof input.promptId !== 'string' || typeof input.actionId !== 'string') {
+        return {
+          ok: false as const,
+          error: {
+            code: 'VALIDATION_ERROR' as const,
+            message: 'Companion response payload is invalid.',
+            retriable: false
+          }
+        };
+      }
+
+      return companionEngine.respond(input);
+    });
+    ipcMain.handle('companion:dismiss', (_event, promptId: string) => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      if (typeof promptId !== 'string' || !promptId.trim()) {
+        return {
+          ok: false as const,
+          error: {
+            code: 'VALIDATION_ERROR' as const,
+            message: 'Companion prompt id is required.',
+            retriable: false
+          }
+        };
+      }
+
+      return companionEngine.dismiss(promptId);
+    });
+    ipcMain.handle('companion:nudge', () => {
+      if (!companionEngine) {
+        return companionUnavailable();
+      }
+
+      return companionEngine.nudge();
+    });
     ipcMain.handle('window:toggle-panel', () => togglePanel());
     ipcMain.handle('window:show-panel', () => showPanel());
 
@@ -202,6 +301,8 @@ if (singleInstance) {
       syncCompanionLayering();
       positionPanelAwayFromCompanion();
     });
+
+    companionEngine.start();
 
     setTimeout(() => {
       syncCompanionLayering();
@@ -236,7 +337,9 @@ if (singleInstance) {
 
   app.on('before-quit', () => {
     runtimeState.isQuitting = true;
+    companionEngine?.stop();
     chatSessionStore?.flush();
+    companionStateStore?.flush();
     windowStateStore?.flush();
   });
 

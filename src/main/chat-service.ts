@@ -37,7 +37,8 @@ export class ChatService {
   constructor(
     private readonly configStore: ConfigStore,
     private readonly sessionStore: ChatSessionStore,
-    private readonly getWindows: () => BrowserWindow[]
+    private readonly getWindows: () => BrowserWindow[],
+    private readonly onChatEvent?: (event: ChatEvent) => void
   ) {}
 
   listHistory() {
@@ -491,6 +492,7 @@ export class ChatService {
   }
 
   private broadcast(event: ChatEvent) {
+    this.onChatEvent?.(event);
     for (const window of this.getWindows()) {
       if (!window.isDestroyed()) {
         window.webContents.send('chat:event', event);

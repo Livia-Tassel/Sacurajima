@@ -21,7 +21,8 @@ const requiredFiles = [
   'docs/features/feature-03-newapi-onboarding.md',
   'docs/features/feature-04-chat-history.md',
   'docs/features/feature-05-visual-assets.md',
-  'docs/features/feature-06-packaging-docs.md'
+  'docs/features/feature-06-packaging-docs.md',
+  'docs/features/feature-07-companion-interaction-core.md'
 ];
 
 const missing = [];
